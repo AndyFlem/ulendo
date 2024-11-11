@@ -1,0 +1,33 @@
+const debug = require('debug')('ulendo:route')
+const config = require('./config/config')
+const auth = require('./services/auth')
+
+const UsersController = require('./controllers/UsersController')
+
+module.exports = (app) => {
+  const prefix = '/api/' + config.api_version
+
+
+
+  // ************************************************
+  // Dont require authentication
+  // ************************************************
+  app.post(prefix + '/signin', UsersController.signin)
+
+  // ************************************************
+  // Setup authentication
+  // ************************************************
+  app.use(prefix, auth.verifyToken)
+
+  // ************************************************
+  // Require authentication
+  // ************************************************  
+  app.get(prefix + '/users', UsersController.index)
+  app.get(prefix + '/user', UsersController.show)
+  app.get(prefix + '/current-user', UsersController.showCurrent)
+  app.get(prefix + '/usergroups/:user_id', UsersController.usergroupsGet)
+  app.post(prefix + '/user', UsersController.create)
+  app.put(prefix + '/users/:user_id', UsersController.update)
+  app.delete(prefix + '/users/:user_id', UsersController.delete)
+  app.put(prefix + '/users/:id/updatepassword', UsersController.updatePassword)
+}

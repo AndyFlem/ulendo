@@ -1,0 +1,40 @@
+{
+  "name": "ulendo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --fix",
+    "devdata": "./src/data/index.sh"
+  },
+  "dependencies": {
+    "@mdi/font": "7.0.96",
+    "axios": "^1.3.4",
+    "core-js": "^3.8.3",
+    "d3": "^7.8.5",
+    "d3-array": "^3.2.4",
+    "d3-dsv": "^3.0.1",
+    "date-fns": "^2.29.3",
+    "luxon": "^3.4.3",
+    "ol": "^10.0.0",
+    "plotly.js-dist-min": "^2.35.2",
+    "roboto-fontface": "*",
+    "vue": "^3.5.12",
+    "vue-router": "^4.4.5",
+    "vuetify": "^3.7.3",
+    "webfontloader": "^1.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@rollup/plugin-dsv": "^3.0.5",
+    "@vitejs/plugin-vue": "^5.1.4",
+    "eslint": "^9.13.0",
+    "eslint-plugin-vue": "^9.29.0",
+    "sass-embedded": "^1.80.4",
+    "vite": "^5.4.10",
+    "vite-plugin-vuetify": "^2.0.4"
+  }
+}

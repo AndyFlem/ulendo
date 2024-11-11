@@ -1,0 +1,10 @@
+/**
+ * src/styles/settings.scss
+ *
+ * Configures SASS variables and Vuetify overwrites
+ */
+
+// https://next.vuetifyjs.com/features/sass-variables/`
+@forward 'vuetify/settings' with (
+    $font-size-root: 1rem !default
+);
