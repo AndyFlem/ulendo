@@ -25,6 +25,10 @@ export default {
       delete localStorage.csrf
       delete localStorage.user
       _user.user_id = null
+      _user.email = null
+      _user.first_name = null
+      _user.last_name = null
+      _user.organisation = null
     }
     app.provide('signout', signout)
 
@@ -61,7 +65,9 @@ export default {
     const getGroups = () => {
       return app.axios.http.get('/usergroups/' + _user.user_id)
         .then(response => {
-          return response.data.map(v=>v.usergroup_ref)
+          const groups = response.data.map(v => v.usergroup_ref)
+          _user.groups = groups
+          return groups
         })
     }
     app.provide('getGroups', getGroups)

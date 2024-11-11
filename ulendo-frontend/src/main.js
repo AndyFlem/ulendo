@@ -1,10 +1,9 @@
-
 import { createApp, inject } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import { registerPlugins } from '@/plugins'
 import appConfig from '@/config'
-import { routes, pages } from '@/router/index'
+import { routes } from '@/router/index'
 
 let app = null
 let config = null
@@ -66,7 +65,6 @@ router.beforeEach((to) => {
     resolve()
   })
     .then(to => {
-      console.log('TO', to)
       return to ? to : true
     })
     .catch(err=>{
@@ -74,8 +72,6 @@ router.beforeEach((to) => {
       return false
     })
 })
-
-
 
 app = createApp(App)
 app.config.globalProperties.$config = config
