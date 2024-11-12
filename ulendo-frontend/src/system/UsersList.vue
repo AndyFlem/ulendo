@@ -1,6 +1,8 @@
 <script setup>
   import { inject } from 'vue'
   import { reactive } from 'vue'
+  import UserForm from '@/system/UserForm.vue'
+  import PasswordForm from '@/system/PasswordForm.vue'
 
   const axiosPlain = inject('axiosSecure')
 
@@ -87,12 +89,18 @@
             density="compact"
           >
             <template v-slot:item.actions="{ item }">
-              <TeamForm :user-id="item.user_id" @user-updated="userUpdated">
+              <UserForm :user-id="item.user_id" @user-created="userCreated" @user-updated="userUpdated">
                 <template #activator="{ activate }">
-                  <v-btn size="x-small" variant="flat" @click="activate" icon="mdi-pencil"></v-btn>
+                  <v-btn title="Edit" size="x-small" variant="flat" @click="activate" icon="mdi-pencil"></v-btn>
                 </template>
-              </TeamForm>
-              <v-btn v-if="item.entry_count == 0" size="x-small" variant="flat" @click="deleteUser(item)" icon="mdi-delete"></v-btn>
+              </UserForm>
+              <PasswordForm :user-id="item.user_id">
+                <template #activator="{ activate }">
+                  <v-btn size="x-small" variant="flat" @click="activate" icon="mdi-key"></v-btn>
+                </template>
+              </PasswordForm>
+
+              <v-btn v-if="item.pageview_count == 0" size="x-small" variant="flat" @click="deleteUser(item)" icon="mdi-delete"></v-btn>
             </template>
             <template #bottom></template>
           </v-data-table>

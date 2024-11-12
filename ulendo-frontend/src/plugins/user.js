@@ -8,8 +8,14 @@ export default {
       email: null,
       first_name: null,
       last_name: null,
-      organisation: null
+      organisation: null,
+      groups: ['public'],
+      isAdmin: false
     })
+    _user.hasGroup = (group) => {
+      console.log('Checking group', group)
+      return _user.groups.includes(group)
+    }
 
     if (localStorage.user) {
       const u = JSON.parse(localStorage.user)
@@ -29,6 +35,8 @@ export default {
       _user.first_name = null
       _user.last_name = null
       _user.organisation = null
+      _user.groups = ['public']
+      _user.isAdmin = false
     }
     app.provide('signout', signout)
 
@@ -40,6 +48,7 @@ export default {
             delete localStorage.user
             throw new Error('Login failed')
           }
+          console.log('Logged in', response.data)
           localStorage.csrf = response.data.csrf
           return app.axios.http.get('/current-user')
         })
@@ -66,7 +75,9 @@ export default {
       return app.axios.http.get('/usergroups/' + _user.user_id)
         .then(response => {
           const groups = response.data.map(v => v.usergroup_ref)
+          groups.push('public')
           _user.groups = groups
+          _user.isAdmin = groups.includes('admin')
           return groups
         })
     }

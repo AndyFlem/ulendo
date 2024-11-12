@@ -23,3 +23,10 @@ const lumwanaDemand=lumwanaDemand_raw.map(v=>{
   return v
 })
 fs.writeFileSync(folder + '/output/lumwanaDemand.csv', d3.csvFormat(lumwanaDemand))
+
+const params = {
+  capacityWindMW: 120,
+  capacitySolarMW: 60,
+  capacitySolar2MW: 60
+}
+fs.writeFileSync(folder + '/output/parameters.json', JSON.stringify(params, null, 2))

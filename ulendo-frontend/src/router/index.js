@@ -1,4 +1,4 @@
-const pages = [
+const pageGroups = [
   {
     name: 'WindSolar',
     title: 'Zambian Wind and Solar',
@@ -9,7 +9,7 @@ const pages = [
       },
       {
         name: 'WindSolarStorageFirm',
-        title: 'Zambian Wind, Solar & Storage Firm Diurnal'
+        title: 'Zambian Wind, Solar & Storage Combinations for a Firm Diurnal'
       }
     ]
   },
@@ -19,7 +19,7 @@ const pages = [
     pages:[
       {
         name: 'LumwanaSupplyDemand',
-        title: 'Lumwana Supply and Demand'
+        title: 'Lumwana Mine Energy Supply and Demand Balance'
       }
     ]
   }
@@ -70,4 +70,4 @@ const routes = [
   }
 ]
 
-export { pages, routes }
+export { pageGroups, routes }

@@ -3,7 +3,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import { registerPlugins } from '@/plugins'
 import appConfig from '@/config'
-import { routes } from '@/router/index'
+import { routes, pageGroups  } from '@/router'
+
+const pages = pageGroups.reduce((acc, group) => {
+  return acc.concat(group.pages)
+},[])
 
 let app = null
 let config = null
@@ -15,17 +19,16 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-
   const user = inject('user')
   const signout = inject('signout')
 
-  document.title = to.meta.title || 'Ulendo'
+  const page = pages.find(v=>v.name==to.name)
+  document.title = page? page.title : to.name || 'Ulendo'
 
   if (!to.meta || !to.meta.groups) {
     to.meta.groups = []
   }
   to.meta.groups.push('admin')
-  console.log('Page groups', to.meta.groups)
 
   return new Promise((resolve) => {
     // If the page is not public and the user is not signed in, redirect to the signin page
@@ -39,7 +42,6 @@ router.beforeEach((to) => {
     if (user.user_id) {
       return inject('getGroups')(user.user_id)
         .then(groups=>{
-          groups.push('public')
 
           const intersection = to.meta.groups.filter(x => groups.includes(x))
 
@@ -61,7 +63,6 @@ router.beforeEach((to) => {
           }
         })
     }
-
     resolve()
   })
     .then(to => {

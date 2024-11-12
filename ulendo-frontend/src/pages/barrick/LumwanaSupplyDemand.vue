@@ -15,15 +15,17 @@
   //const months = inject('months')
 
   import lumwanaDemand from '@/data/barrick/output/lumwanaDemand.csv'
-console.log(lumwanaDemand[0])
+  import parameters from '@/data/barrick/output/parameters.json'
+
 
   const chartLumwanaDemand = computed(() => {
 
     var data = [
       {
         x: lumwanaDemand.map(v=>v.year),
-        y: lumwanaDemand.map(v=>v.demandMW),
-        type: 'bar', showlegend:false, name: '',
+        text: lumwanaDemand.map(v=>d3.format(',.0f')(v.demandMW)+'MW'),
+        y: lumwanaDemand.map(v=>v.demandMW), hoverinfo: 'text',
+        type: 'bar', showlegend:false, name: 'Demand', textposition: 'none',
         marker: {shape: 'spline',width:1.5, color: makeTrans(colors.demand[5],0.6)}
       },{
         x: [2023,2042],yaxis:'y2',showlegend:false,
@@ -34,7 +36,7 @@ console.log(lumwanaDemand[0])
       }]
 
     var layout = {
-      height: 260,
+      height: 270,
       showlegend: true, legend: {xanchor: 'left', x:0, y: -0.2, orientation:'h'},
       margin: {l: 70,r: 70,b: 30,t: 10}, font:font,
       xaxis: {
@@ -64,17 +66,45 @@ console.log(lumwanaDemand[0])
   <PresentationPage>
     <v-row :class="!smAndUp?'ma-0 pa-0':'pa-5'">
       <v-col cols="12">
-        <h1>Lumwana</h1>
-
+        <h1>Lumwana Mine Energy Supply and Demand Balance</h1>
+         Energy demand at the Barrick Gold Lumwana Mine is forecast to rise significantly with the expansion of the mine over the next 10 to 20 years.
+         The mine consumes approximately 40 GWh per month in 2023 which is expected to rise to 90 GWh
+         per month by 2028, 100 GWh per month by 2031 and 120 GWh per month by 2042.
+         <br><br>
+         Zambia is currently experiencing a significant power deficit due to structural shortages of power generation capacity and
+         , in 2024-2025 drought impacting hydropower production. Although new power generation projects are being developed,
+         the power supply situation is expected to remain tight for the foreseeable future.
+         To secure its energy supply, the mine is considering entering into a long-term power purchase agreement with
+         new renewable power generation projects in Zambia based on Solar PV and Wind power.
       </v-col>
-      <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
+      <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
           <PlotlyChart :definition="chartLumwanaDemand" />
           <figcaption>
-          A
+          Lumwana mine forecasted power demand in MW and energy consumption in GWh/month based on 8,000hrs/year of operation.
         </figcaption>
         </v-sheet>
       </v-col>
+      <v-col cols="12">
+        Demand from large industrial customers such as mines is consistent and predictable over all timescales - from low hourly,
+        through daily (diurnal) and up to annual, seasonal variations. In contrast,
+        <router-link :to="{name: 'WindSolarYield'}">generation from renewable sources such as
+          wind and solar is variable and intermittent </router-link>(dependent on weather conditions).
+        <br><br>
+        The challenge is to match the supply of renewable energy with the industrial demand and whilst, in Zambia,
+        <router-link  :to="{name: 'WindSolarStorageFirm'}">certain combinations of renewable energy
+        sources can be complementary</router-link>, medium and long-term smoothing and balancing services - either from
+        the utility or the regional power market - are required to ensure a consistent supply.
+      </v-col>
+      <v-col cols="12">
+        <h2>Unika II Wind</h2>
+        The Mphepo Power - Unika II Wind Project is a {{ parameters.capacityWindMW }}MW grid connected wind farm that will be constructed in the
+        Katete District of Eastern Province, Zambia.
+        Installation of the [XX] wind turbines is expected to commence in [OOOO] and be completed by [ZZZZ].
+        <br><br>
+        The project is expected to generate approximately {{ parameters.energyWindGWh }}GWh of electricity per year.
+      </v-col>
+
     </v-row>
   </PresentationPage>
 </template>

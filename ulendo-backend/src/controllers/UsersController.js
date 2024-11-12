@@ -64,7 +64,7 @@ module.exports = {
           .select()
       })
       .then(usergroups => {
-        user.groups = usergroups.map(ug => ug.group_name)
+        user.groups = usergroups.map(ug => ug.usergroup_ref)
         return user
       })
   },
@@ -81,6 +81,18 @@ module.exports = {
         res.status(500).send({ error: 'an error has occured trying to fetch the user groups: ' + err })
       })
   },
+  groupsGet(req, res) {
+    Common.debug(req, 'groupsGet')
+    return Knex('usergroup')
+      .select()
+      .then(usergroups => {
+        res.send(usergroups)
+      })
+      .catch(err => {
+        Common.error(req, 'groupsGet', err)
+        res.status(500).send({ error: 'an error has occured trying to fetch the groups: ' + err })
+      })
+  },
 
   // =======================
   // #region READ WRITE API
@@ -90,7 +102,8 @@ module.exports = {
     Common.debug(req, 'create')
 
     var salt = bcrypt.genSaltSync(10)
-    var hash = bcrypt.hashSync(req.body.password, salt)
+    var hash = null
+    if (req.body.password) { hash = bcrypt.hashSync(req.body.password, salt) }
     let userId = null
 
     Knex.transaction(function (trx) {
@@ -100,12 +113,19 @@ module.exports = {
           last_name: req.body.last_name,
           email: req.body.email,
           password_digest: hash,
+          can_login: req.body.password ? true : false,
+          organisation: req.body.organisation
           })
         .returning('user_id')
         .transacting(trx)
         .then(userIds => {
           userId = userIds[0].user_id
+          if (!req.body.groups.length>0) { return }
+          return Knex('usergroup_user')
+            .insert(req.body.groups.map(g => {return {user_id: userId, usergroup_id: g.usergroup_id}}))
+            .transacting(trx)
         })
+  
         .then(trx.commit)
         .catch(trx.rollback)
     })
@@ -127,13 +147,28 @@ module.exports = {
 
     Knex.transaction(trx => {
       Knex('user')
-      .where({user_id: req.params.id})
+      .where({user_id: req.params.user_id})
       .transacting(trx)      
       .update({
         first_name: req.body.first_name,
         last_name: req.body.last_name,
         email: req.body.email,
-        can_login: req.body.can_login})
+        can_login: req.body.can_login,
+        organisation: req.body.organisation,
+        is_deleted: req.body.is_deleted
+      })
+      .then(() => {
+        return Knex('usergroup_user')
+          .where({user_id: req.params.user_id})
+          .delete()
+          .transacting(trx)
+      })
+      .then(() => {
+        if (!req.body.groups.length>0) { return }
+        return Knex('usergroup_user')
+          .insert(req.body.groups.map(g => {return {user_id: req.params.user_id, usergroup_id: g.usergroup_id}}))
+          .transacting(trx)
+      })
       .then(trx.commit)
       .catch(trx.rollback)
     })
@@ -146,15 +181,48 @@ module.exports = {
       })
   },
 
+  updatePassword (req, res) {
+    Common.debug(req, 'updatePassword')
+
+    var salt = bcrypt.genSaltSync(10)
+    var hash = bcrypt.hashSync(req.body.password, salt)
+
+    Knex.transaction(trx => {
+      Knex('user')
+      .where({user_id: req.params.user_id})
+      .update({password_digest: hash})
+      .transacting(trx)
+      .then(trx.commit)
+      .catch(trx.rollback)
+    })
+      .then(() => {
+        res.status(200).send({user_id: req.params.id})
+      })
+      .catch(err => {
+        Common.error(req, 'updatePassword', err)
+        res.status(500).send({ error: 'an error has occured trying to update the user password: ' + err })
+      })
+  },
+
   // Mark a user as deleted
   delete (req, res) {
     Common.debug(req, 'delete')
 
     Knex.transaction(function (trx) {
-      Knex.raw(`UPDATE "user" SET can_login=false, is_deleted=true, last_name=concat(last_name, ' (deleted)'), email=concat(user_id,'_deleted_',email) WHERE user_id=?`, req.params.id)
-        .transacting(trx)
-        .then(trx.commit)
-        .catch(trx.rollback)
+      return module.exports.userGet(req, req.params.user_id)
+        .then(user => {
+          if (user.pageview_count>0) {
+            return Knex.raw(`UPDATE "user" SET can_login=false, is_deleted=true, last_name=concat(last_name, ' (deleted)'), email=concat(user_id,'_deleted_',email) WHERE user_id=?`, req.params.user_id)
+            .transacting(trx)
+            .then(trx.commit)
+            .catch(trx.rollback)
+          } else {
+            return Knex('user')
+              .where({user_id: req.params.user_id})
+              .delete()
+              .transacting(trx)
+          }
+        })
     })
       .then(() => {
         res.status(200).send({user_id: req.params.id})

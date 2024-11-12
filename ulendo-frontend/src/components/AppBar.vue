@@ -53,12 +53,9 @@
     </v-menu>
   </v-app-bar>
   <v-navigation-drawer temporary v-model="drawer">
-    <v-list
-      density="compact"
-      nav
-    >
+    <v-list density="compact" nav>
       <v-list-item prepend-icon="mdi-view-dashboard" to="/">Home</v-list-item>
-      <v-list-item v-if="" prepend-icon="mdi-account" :to="{name: 'Users'}">Users</v-list-item>
+      <v-list-item v-if="user.isAdmin" prepend-icon="mdi-account" :to="{name: 'Users'}">Users</v-list-item>
     </v-list>
   </v-navigation-drawer>
 </template>
