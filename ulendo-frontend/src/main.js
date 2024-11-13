@@ -5,6 +5,7 @@ import { registerPlugins } from '@/plugins'
 import appConfig from '@/config'
 import { routes, pageGroups  } from '@/router'
 
+// eslint-disable-next-line no-undef
 console.log('Ulendo in', __APP_ENV__ , 'mode.')
 
 const pages = pageGroups.reduce((acc, group) => {
@@ -13,6 +14,7 @@ const pages = pageGroups.reduce((acc, group) => {
 
 let app = null
 let config = null
+// eslint-disable-next-line no-undef
 config = appConfig[__APP_ENV__]
 
 const router = createRouter({

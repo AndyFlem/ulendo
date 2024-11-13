@@ -7,8 +7,8 @@ export default {
     timeout: 5000
   },
   production: {
-    baseUrl: 'http://pages.ulendo.com/api/v1/',
-    baseUrlStatic: 'http://pages.ulendo.com/',
+    baseUrl: 'https://pages.ulendo.com/api/v1/',
+    baseUrlStatic: 'https://pages.ulendo.com/',
     timeout: 5000
   }
 }
