@@ -1,7 +1,9 @@
 <script setup>
   import {  inject, computed } from 'vue'
   import { useDisplay } from 'vuetify'
-  import * as d3 from 'd3'
+  import {  max } from 'd3-array'
+  //import { groups, min, max, mean, sum } from 'd3-array'
+  import { format } from 'd3-format'
 
   import PlotlyChart from '@/components/PlotlyChart.vue'
 
@@ -23,14 +25,14 @@
     var data = [
       {
         x: lumwanaDemand.map(v=>v.year),
-        text: lumwanaDemand.map(v=>d3.format(',.0f')(v.demandMW)+'MW'),
+        text: lumwanaDemand.map(v=>format(',.0f')(v.demandMW)+'MW'),
         y: lumwanaDemand.map(v=>v.demandMW), hoverinfo: 'text',
         type: 'bar', showlegend:false, name: 'Demand', textposition: 'none',
         marker: {shape: 'spline',width:1.5, color: makeTrans(colors.demand[5],0.6)}
       },{
         x: [2023,2042],yaxis:'y2',showlegend:false,
-        y: [d3.max(lumwanaDemand,v=>v.annualEnergyGWh/12),d3.max(lumwanaDemand,v=>v.annualEnergyGWh/12)],
-        text: ['',d3.format(',.0f')(d3.max(lumwanaDemand,v=>v.annualEnergyGWh/12))+'GWh/month'],
+        y: [max(lumwanaDemand,v=>v.annualEnergyGWh/12),max(lumwanaDemand,v=>v.annualEnergyGWh/12)],
+        text: ['',format(',.0f')(max(lumwanaDemand,v=>v.annualEnergyGWh/12))+'GWh/month'],
         textposition:'top', hoverinfo:'none',
         line: {width:0.5}, mode:'lines+text'
       }]
@@ -46,14 +48,14 @@
       },
       yaxis: {
         title: 'MW',
-        range: [0, d3.max(lumwanaDemand,v=>v.demandMW)*1.1],
+        range: [0, max(lumwanaDemand,v=>v.demandMW)*1.1],
         showgrid: true, zeroline: false, tickformat: ',.0f', ticks:'outside',
       },
       yaxis2: {
         showgrid: false,zeroline: false,
         showline: false,title: 'GWh/month',
         tickformat: ',.0f', ticks:'outside',
-        range:[0,d3.max(lumwanaDemand,v=>v.demandMW)*1.1*8/12],
+        range:[0,max(lumwanaDemand,v=>v.demandMW)*1.1*8/12],
         overlaying: 'y',side: 'right'
       }
     }

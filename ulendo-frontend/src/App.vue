@@ -13,12 +13,14 @@
     { immediate: true }
   )
 
+
 </script>
 
 <template>
   <v-app>
     <v-main>
       <AppBar />
+
       <RouterView />
 
     </v-main>

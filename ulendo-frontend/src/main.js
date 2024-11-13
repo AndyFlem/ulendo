@@ -5,13 +5,15 @@ import { registerPlugins } from '@/plugins'
 import appConfig from '@/config'
 import { routes, pageGroups  } from '@/router'
 
+console.log('Ulendo in', __APP_ENV__ , 'mode.')
+
 const pages = pageGroups.reduce((acc, group) => {
   return acc.concat(group.pages)
 },[])
 
 let app = null
 let config = null
-config = appConfig
+config = appConfig[__APP_ENV__]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

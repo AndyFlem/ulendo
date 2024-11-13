@@ -3,7 +3,8 @@
   import { useDisplay } from 'vuetify'
   import PlotlyChart from '@/components/PlotlyChart.vue'
   import PresentationPage from '@/components/PresentationPage.vue'
-  import * as d3 from 'd3'
+  import { groups, min, max, mean, sum } from 'd3-array'
+  import { format } from 'd3-format'
 
   const { smAndUp } = useDisplay()
 
@@ -16,12 +17,12 @@
   import solarDiurnal from '@/data/zambia_wind_solar/output/solarDiurnal.csv'
   import solarCalmonthly from '@/data/zambia_wind_solar/output/solarCalmonthly.csv'
   import solarCalmonthlyHours_raw from '@/data/zambia_wind_solar/output/solarCalmonthlyHours.csv'
-  const solarCalmonthlyHours = d3.groups(solarCalmonthlyHours_raw, d => d.month).map(v=>v[1])
+  const solarCalmonthlyHours = groups(solarCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
   import windCalmonthly from '@/data/zambia_wind_solar/output/windCalmonthly.csv'
   import windCalmonthlyHours_raw from '@/data/zambia_wind_solar/output/windCalmonthlyHours.csv'
 
-  const windCalmonthlyHours = d3.groups(windCalmonthlyHours_raw, d => d.month).map(v=>v[1])
+  const windCalmonthlyHours = groups(windCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
 
   const selectedRatio=ref(39)
@@ -44,17 +45,17 @@
       })
 
       ratio.monthly_av_cfs = [...Array(12).keys()].map(month_no=>{
-        return d3.mean(ratio.combined_cfs[month_no])
+        return mean(ratio.combined_cfs[month_no])
       })
 
       ratio.monthly_store = [...Array(12).keys()].map(month_no=>{
-        return d3.sum(ratio.combined_cfs[month_no].map(v=>v>ratio.monthly_av_cfs[month_no]?v-ratio.monthly_av_cfs[month_no]:0))
+        return sum(ratio.combined_cfs[month_no].map(v=>v>ratio.monthly_av_cfs[month_no]?v-ratio.monthly_av_cfs[month_no]:0))
       })
       ratio.store_hours = [...Array(12).keys()].map(month_no=>{
         return ratio.combined_cfs[month_no].filter(v=>v>ratio.monthly_av_cfs[month_no]).length
       })
-      ratio.store_max = d3.max(ratio.monthly_store)
-      ratio.store_range = d3.max(ratio.monthly_store) - d3.min(ratio.monthly_store)
+      ratio.store_max = max(ratio.monthly_store)
+      ratio.store_range = max(ratio.monthly_store) - min(ratio.monthly_store)
 
       return ratio
     })
@@ -62,7 +63,7 @@
     return ret
   })()
 
-  const optimumCombination=combinationModels.filter(w=>w.store_max==d3.min(combinationModels.map(v=>v.store_max)))[0]
+  const optimumCombination=combinationModels.filter(w=>w.store_max==min(combinationModels.map(v=>v.store_max)))[0]
 
   const chartWindSolarDiurnal = computed(() => {
     var data = [ {
@@ -187,17 +188,17 @@
         y:combinationModels[10].combined_cfs[5],
         x:[...Array(24).keys()],
         mode: 'lines', line: {shape:'spline',color: colors.combined[1],width:2}, fill:'',
-        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${d3.format('.2f')(combinationModels[10].ratio)}MW solar per MW wind`
+        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(combinationModels[10].ratio)}MW solar per MW wind`
       },{
         y:optimumCombination.combined_cfs[5],
         x:[...Array(24).keys()],
         mode: 'lines', line: {shape:'spline',color: colors.combined[4],width:4}, fill:'',
-        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${d3.format('.2f')(optimumCombination.ratio)}MW solar per MW wind`
+        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(optimumCombination.ratio)}MW solar per MW wind`
         },{
         y:combinationModels[90].combined_cfs[5],
         x:[...Array(24).keys()],
         mode: 'lines', line: {shape:'spline',color: colors.combined[10],width:2}, fill:'',
-        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${d3.format('.2f')(combinationModels[90].ratio)}MW solar per MW wind`
+        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(combinationModels[90].ratio)}MW solar per MW wind`
       }]
 
     var layout = {
@@ -251,7 +252,7 @@
     var data = [     {
         x: [...Array(12).keys()].map(v=>v+1),
         y: dat.monthly_store,name: '',
-        text: dat.monthly_store.map(v=>d3.format('.2f')(v)),
+        text: dat.monthly_store.map(v=>format('.2f')(v)),
         type: 'bar', mode: 'markers+text', hoverinfo: 'none', stackgroup:'one',
         showlegend:false, marker: {color: makeTrans(colors.combined[5],0.6)}, textposition:'inside'
       }]
@@ -288,7 +289,7 @@
     data=data.concat([{
       y:[optimumCombination.store_range],
       x:[optimumCombination.ratio],
-      text: [d3.format('.2f')(optimumCombination.ratio)],
+      text: [format('.2f')(optimumCombination.ratio)],
       name:'Optimum ratio',textposition:'top-center',showlegend:false,
       mode:'markers+text',type:'scatter', hoverinfo:'none', marker:{size:15, color:'black'}
     }])
@@ -322,13 +323,13 @@
     data=data.concat([{
       y:combinationModels.map(v=>v.store_max),
       x:combinationModels.map(v=>v.ratio),
-      text:combinationModels.map(v=>d3.format('.2f')(v.store_max)),name:'Storage requirement',
+      text:combinationModels.map(v=>format('.2f')(v.store_max)),name:'Storage requirement',
       mode:'lines',type:'scatter', hoverinfo:'x+text', line:{shape:'spline', width:2.5, color:'red'}
     }])
     data=data.concat([{
       y:[optimumCombination.store_max],
       x:[optimumCombination.ratio],
-      text: [d3.format('.2f')(optimumCombination.ratio) + ','+ d3.format('.1f')(optimumCombination.store_max)],
+      text: [format('.2f')(optimumCombination.ratio) + ','+ format('.1f')(optimumCombination.store_max)],
       name:'Optimum ratio',textposition:'top-center',showlegend:false,
       mode:'markers+text',type:'scatter', hoverinfo:'none', marker:{size:15, color:'black'}
     }])
@@ -405,7 +406,7 @@
           <v-col cols="12" sm="6" md="4">
             <v-slider v-model="selectedRatio" :max="99" :min="0" :step="1" class="align-center" hide-details>
               <template v-slot:append>
-                <span><b>{{ d3.format('.2f')(ratio) }}</b> MW Solar PV : MW Wind</span>
+                <span><b>{{ format('.2f')(ratio) }}</b> MW Solar PV : MW Wind</span>
               </template>
             </v-slider>
           </v-col>
@@ -422,7 +423,7 @@
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
           <PlotlyChart v-if="chartMonthlyCombinedDiurnals" :definition="chartMonthlyCombinedDiurnals" />
           <figcaption>
-            Diurnal output by month for a combined plant with {{d3.format('.2f')(ratio)}}MW solar per MW wind.
+            Diurnal output by month for a combined plant with {{format('.2f')(ratio)}}MW solar per MW wind.
           </figcaption>
         </v-sheet>
       </v-col>
@@ -431,7 +432,7 @@
           <PlotlyChart v-if="chartDailyStorageHoursByMonth" :definition="chartDailyStorageHoursByMonth" />
           <figcaption>
           Daily storage required in hours by month to entirely flatten the average diurnal output of a combined
-          plant with {{d3.format('.2f')(ratio)}}MW solar per MW wind.
+          plant with {{format('.2f')(ratio)}}MW solar per MW wind.
           </figcaption>
         </v-sheet>
       </v-col>
@@ -455,15 +456,15 @@
         <v-sheet class="border ma-0 pa-0">
           <PlotlyChart :definition="chartDailyStorageRequirement" />
           <figcaption>Daily storage requirement by month and ratio of solar to wind capacity to flatten the diurnal for a combined plant.
-            Maximum storage requirement for the year in red. Optimum ratio is {{d3.format('.2f')(optimumCombination.ratio)}}MW solar per MW wind
-            with {{d3.format('.1f')(optimumCombination.store_max)}} hours of storage.</figcaption>
+            Maximum storage requirement for the year in red. Optimum ratio is {{format('.2f')(optimumCombination.ratio)}}MW solar per MW wind
+            with {{format('.1f')(optimumCombination.store_max)}} hours of storage.</figcaption>
         </v-sheet>
       </v-col>
       <v-col cols="12">
         The ratio of solar capacity to wind capacity that minimises the relative storage requirement (in hours) can be determined
         by plotting the storage required to completely flatten the diurnal output of the combined plant for a range of capacity
-        ratios for each month. For the Unika and Ilute plants this shows that {{d3.format('.2f')(optimumCombination.ratio)}}MW of solar per MW of
-        wind capacity minimises the storage requirement at {{d3.format('.1f')(optimumCombination.store_max)}} hours to flatten the average diurnal output.
+        ratios for each month. For the Unika and Ilute plants this shows that {{format('.2f')(optimumCombination.ratio)}}MW of solar per MW of
+        wind capacity minimises the storage requirement at {{format('.1f')(optimumCombination.store_max)}} hours to flatten the average diurnal output.
       </v-col>
     </v-row>
   </PresentationPage>

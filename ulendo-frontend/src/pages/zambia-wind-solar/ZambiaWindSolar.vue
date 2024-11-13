@@ -1,7 +1,8 @@
 <script setup>
   import {  inject, computed, ref } from 'vue'
   import { useDisplay } from 'vuetify'
-  import * as d3 from 'd3'
+  import { groups, min, max, mean, sum } from 'd3-array'
+  import { format } from 'd3-format'
 
   import PlotlyChart from '@/components/PlotlyChart.vue'
 
@@ -20,7 +21,7 @@
   import solarYearly from '@/data/zambia_wind_solar/output/solarYearly.csv'
   import solarCalmonthly from '@/data/zambia_wind_solar/output/solarCalmonthly.csv'
   import solarCalmonthlyHours_raw from '@/data/zambia_wind_solar/output/solarCalmonthlyHours.csv'
-  const solarCalmonthlyHours = d3.groups(solarCalmonthlyHours_raw, d => d.month).map(v=>v[1])
+  const solarCalmonthlyHours = groups(solarCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
   import windAnnualExceedance from '@/data/zambia_wind_solar/output/windAnnualExceedance.csv'
   import windStatistics_raw from '@/data/zambia_wind_solar/output/windStatistics.csv'
@@ -28,7 +29,7 @@
   import windYearly from '@/data/zambia_wind_solar/output/windYearly.csv'
   import windCalmonthly from '@/data/zambia_wind_solar/output/windCalmonthly.csv'
   import windCalmonthlyHours_raw from '@/data/zambia_wind_solar/output/windCalmonthlyHours.csv'
-  const windCalmonthlyHours = d3.groups(windCalmonthlyHours_raw, d => d.month).map(v=>v[1])
+  const windCalmonthlyHours = groups(windCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
   import dailyCapFactorFeb2019 from '@/data/zambia_wind_solar/output/dailyCapFactorFeb2019.csv'
   import hourlyCapFactorFeb2019 from '@/data/zambia_wind_solar/output/hourlyCapFactorFeb2019.csv'
@@ -58,17 +59,17 @@
       })
 
       ratio.monthly_av_cfs = [...Array(12).keys()].map(month_no=>{
-        return d3.mean(ratio.combined_cfs[month_no])
+        return mean(ratio.combined_cfs[month_no])
       })
 
       ratio.monthly_store = [...Array(12).keys()].map(month_no=>{
-        return d3.sum(ratio.combined_cfs[month_no].map(v=>v>ratio.monthly_av_cfs[month_no]?v-ratio.monthly_av_cfs[month_no]:0))
+        return sum(ratio.combined_cfs[month_no].map(v=>v>ratio.monthly_av_cfs[month_no]?v-ratio.monthly_av_cfs[month_no]:0))
       })
       ratio.store_hours = [...Array(12).keys()].map(month_no=>{
         return ratio.combined_cfs[month_no].filter(v=>v>ratio.monthly_av_cfs[month_no]).length
       })
-      ratio.store_max = d3.max(ratio.monthly_store)
-      ratio.store_range = d3.max(ratio.monthly_store) - d3.min(ratio.monthly_store)
+      ratio.store_max = max(ratio.monthly_store)
+      ratio.store_range = max(ratio.monthly_store) - min(ratio.monthly_store)
 
       return ratio
     })
@@ -76,7 +77,7 @@
     return ret
   })()
 
-  const optimumCombination=combinationModels.filter(w=>w.store_max==d3.min(combinationModels.map(v=>v.store_max)))[0]
+  const optimumCombination=combinationModels.filter(w=>w.store_max==min(combinationModels.map(v=>v.store_max)))[0]
 
 
   const specificCapitalCost = { // $m per MW
@@ -121,13 +122,13 @@
       yaxis: {
         title: '% difference from median',  dtick:0.02,
         showgrid: true, zeroline: false, tickformat: ',.0%', ticks:'outside',
-        range:[d3.min(windAnnualExceedance,v=>v.normalisedYearlySpecificYield),d3.max(windAnnualExceedance,v=>v.normalisedYearlySpecificYield)],
+        range:[min(windAnnualExceedance,v=>v.normalisedYearlySpecificYield),max(windAnnualExceedance,v=>v.normalisedYearlySpecificYield)],
       },
       yaxis2: {
         showgrid: false,zeroline: false,
         showline: false,title: 'Specific Yield GWh/MW/year',
         tickformat: ',.2f',
-        range:[d3.min(windAnnualExceedance,v=>v.yearlySpecificYield/1000),d3.max(windAnnualExceedance,v=>v.yearlySpecificYield/1000)],
+        range:[min(windAnnualExceedance,v=>v.yearlySpecificYield/1000),max(windAnnualExceedance,v=>v.yearlySpecificYield/1000)],
         overlaying: 'y',side: 'right'
       }
     }
@@ -143,7 +144,7 @@
         type: 'scatter', showlegend:true, hoverinfo:'x+y',name: 'Solar',
         mode:'lines', line: {shape: '',width:3.5, color: colors.solar[1]}
       },{
-        text: [d3.format(',.2f')(solarStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'],
+        text: [format(',.2f')(solarStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'],
         x: [0.5],
         y: [solarStatistics.medianAnualSpecificYield/1000],
         type: 'scatter', showlegend:false,hoverinfo:'y',textposition:'bottomright',
@@ -154,7 +155,7 @@
         type: 'scatter', showlegend:true, hoverinfo:'x+y', name: 'Wind',
         mode:'lines', line: {shape: '',width:3.5, color: colors.wind[1]}
       },{
-        text: [d3.format(',.2f')(windStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'],
+        text: [format(',.2f')(windStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'],
         x: [0.5],
         y: [windStatistics.medianAnualSpecificYield/1000],
         type: 'scatter', showlegend:false,hoverinfo:'y',textposition:'bottomright',
@@ -331,7 +332,7 @@
     var data = [
       {
         y: vicfallsCalmonthly.map(month=>month.flow),
-        text: vicfallsCalmonthly.map(month=>d3.format(',.0f')(month.flow) + `m\u00b3/s`),
+        text: vicfallsCalmonthly.map(month=>format(',.0f')(month.flow) + `m\u00b3/s`),
         x: vicfallsCalmonthly.map(month=>month.month),
         yaxis: 'y2',  hoverinfo: 'x+text',
         textposition: 'none',
@@ -350,7 +351,7 @@
         mode:'lines', line: {shape: 'spline',width:0, color: colors.wind[1]}
       },{
         x: windCalmonthly.map(v=>v.month),
-        text: windCalmonthly.map(v=>d3.format(',.0f')(v.medianMonthlySpecificYield) + ' MWh/MW'),
+        text: windCalmonthly.map(v=>format(',.0f')(v.medianMonthlySpecificYield) + ' MWh/MW'),
         y: windCalmonthly.map(v=>v.medianMonthlySpecificYield),
         type: 'scatter', showlegend:true, name: 'Wind', hoverinfo:'text',
         mode:'lines', line: {shape: 'spline',width:1.5, color: colors.wind[1], dash:''}
@@ -476,17 +477,17 @@
         y:combinationModels[10].combined_cfs[5],
         x:[...Array(24).keys()],
         mode: 'lines', line: {shape:'spline',color: colors.combined[1],width:2}, fill:'',
-        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${d3.format('.2f')(combinationModels[10].ratio)}MW solar per MW wind`
+        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(combinationModels[10].ratio)}MW solar per MW wind`
       },{
         y:optimumCombination.combined_cfs[5],
         x:[...Array(24).keys()],
         mode: 'lines', line: {shape:'spline',color: colors.combined[4],width:4}, fill:'',
-        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${d3.format('.2f')(optimumCombination.ratio)}MW solar per MW wind`
+        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(optimumCombination.ratio)}MW solar per MW wind`
         },{
         y:combinationModels[90].combined_cfs[5],
         x:[...Array(24).keys()],
         mode: 'lines', line: {shape:'spline',color: colors.combined[10],width:2}, fill:'',
-        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${d3.format('.2f')(combinationModels[90].ratio)}MW solar per MW wind`
+        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(combinationModels[90].ratio)}MW solar per MW wind`
       }]
 
     var layout = {
@@ -547,13 +548,13 @@
     data=data.concat([{
       y:combinationModels.map(v=>v.store_max),
       x:combinationModels.map(v=>v.ratio),
-      text:combinationModels.map(v=>d3.format('.2f')(v.store_max)),name:'Storage requirement',
+      text:combinationModels.map(v=>format('.2f')(v.store_max)),name:'Storage requirement',
       mode:'lines',type:'scatter', hoverinfo:'x+text', line:{shape:'spline', width:2.5, color:'red'}
     }])
     data=data.concat([{
       y:[optimumCombination.store_max],
       x:[optimumCombination.ratio],
-      text: [d3.format('.2f')(optimumCombination.ratio) + ','+ d3.format('.1f')(optimumCombination.store_max)],
+      text: [format('.2f')(optimumCombination.ratio) + ','+ format('.1f')(optimumCombination.store_max)],
       name:'Optimum ratio',textposition:'top-center',showlegend:false,
       mode:'markers+text',type:'scatter', hoverinfo:'none', marker:{size:15, color:'black'}
     }])
@@ -649,20 +650,20 @@
         </v-sheet>
       </v-col>
       <v-col cols="12">
-        At {{d3.format(',.1f')(windStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'}}, wind
-        provides {{d3.format(',.0%')((windStatistics.medianAnualSpecificYield-solarStatistics.medianAnualSpecificYield)/solarStatistics.medianAnualSpecificYield)}}
+        At {{format(',.1f')(windStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'}}, wind
+        provides {{format(',.0%')((windStatistics.medianAnualSpecificYield-solarStatistics.medianAnualSpecificYield)/solarStatistics.medianAnualSpecificYield)}}
         more energy on an annual basis than the same capacity of solar generation
-        at {{d3.format(',.1f')(solarStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'}}.
+        at {{format(',.1f')(solarStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'}}.
         <br/><br/>
         However, wind capacity has a higer capital cost - approx.
-        {{'$' + d3.format(',.1f')(specificCapitalCost.wind) + ' million/MW'}} - than solar at
-        approx. {{'$' + d3.format(',.1f')(specificCapitalCost.solar) + ' million/MW'}}.
+        {{'$' + format(',.1f')(specificCapitalCost.wind) + ' million/MW'}} - than solar at
+        approx. {{'$' + format(',.1f')(specificCapitalCost.solar) + ' million/MW'}}.
 
         Adjusting for the difference in capital cost of the two types of generation shows that wind capacity is
-        {{d3.format(',.0%')((specificCapitalCostOfAnnualEnergy.wind-specificCapitalCostOfAnnualEnergy.solar)/specificCapitalCostOfAnnualEnergy.solar)}}
+        {{format(',.0%')((specificCapitalCostOfAnnualEnergy.wind-specificCapitalCostOfAnnualEnergy.solar)/specificCapitalCostOfAnnualEnergy.solar)}}
          more expensive tha annual solar generation at
-         {{ '$' + d3.format(',.0f')(specificCapitalCostOfAnnualEnergy.solar) + 'capital/GWh/year'}} for solar
-         compared to {{ '$' + d3.format(',.0f')(specificCapitalCostOfAnnualEnergy.wind) + 'capital/GWh/year'}} for wind generation.
+         {{ '$' + format(',.0f')(specificCapitalCostOfAnnualEnergy.solar) + 'capital/GWh/year'}} for solar
+         compared to {{ '$' + format(',.0f')(specificCapitalCostOfAnnualEnergy.wind) + 'capital/GWh/year'}} for wind generation.
         <br/><br/>
         However, despite being marginally more capital intensive on an annual energy basis than solar generation,
         wind power has better yield characteristics at shorter timeframes, most obviously on a daily, diurnal basis
@@ -755,7 +756,7 @@
         from the two sources can produce a firmer, more constant diurnal production profile.
 
         It can be shown that the optimum ratio of solar PV to wind capacity for the firmest, most constant diurnal throughout the
-        year is {{d3.format('.2f')(optimumCombination.ratio)}}MW:1.00MW solar:wind. <RouterLink to="/zambia-wind-solar-storage-firm-diurnal">See here for the analysis.</RouterLink>
+        year is {{format('.2f')(optimumCombination.ratio)}}MW:1.00MW solar:wind. <RouterLink to="/zambia-wind-solar-storage-firm-diurnal">See here for the analysis.</RouterLink>
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet class="border ma-0 pa-0">
@@ -766,13 +767,13 @@
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet class="border ma-0 pa-0">
           <PlotlyChart :definition="chartMonthlyCombinedDiurnals" />
-          <figcaption>Diurnal output by month for a combined plant with {{d3.format('.2f')(ratio)}}MW solar per MW wind.</figcaption>
+          <figcaption>Diurnal output by month for a combined plant with {{format('.2f')(ratio)}}MW solar per MW wind.</figcaption>
         </v-sheet>
       </v-col>
       <v-col cols="12">
         It can also be shown that the minimum capacity of storage required to completely flatten the <i>average</i> diurnal
         output of a compbined wind and solar plant with a ratio of solar to
-        wind capacity of {{d3.format('.2f')(ratio)}}MW/MW is {{ d3.format('.1f')(optimumCombination.store_max) }} hours of storage or {{ d3.format('.1f')(optimumCombination.store_max) }}MWh / MW installed.
+        wind capacity of {{format('.2f')(ratio)}}MW/MW is {{ format('.1f')(optimumCombination.store_max) }} hours of storage or {{ format('.1f')(optimumCombination.store_max) }}MWh / MW installed.
         Higher quantities of storage are required where other ratios of solar to wind are constructed.
         <br><br>
         It is important to realise that this storage is only designed to flatten the average diurnal output
@@ -787,8 +788,8 @@
         <v-sheet class="border ma-0 pa-0">
           <PlotlyChart :definition="chartDailyStorageRequirement" />
           <figcaption>Daily storage requirement by month and ratio of solar to wind capacity to flatten the diurnal for a combined plant.
-            Maximum storage requirement for the year in red. Optimum ratio is {{d3.format('.2f')(optimumCombination.ratio)}}MW solar per MW wind
-            with {{d3.format('.1f')(optimumCombination.store_max)}} hours of storage.</figcaption>
+            Maximum storage requirement for the year in red. Optimum ratio is {{format('.2f')(optimumCombination.ratio)}}MW solar per MW wind
+            with {{format('.1f')(optimumCombination.store_max)}} hours of storage.</figcaption>
         </v-sheet>
       </v-col>
     </v-row>
