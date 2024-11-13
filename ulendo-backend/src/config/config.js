@@ -1,6 +1,6 @@
 const config = {
     port: 4001,
-    cors_origin: 'http://localhost:4000',
+    cors_origin: ['http://localhost:4000','http://pages.ulendo.com','https://pages.ulendo.com'],
     development_mode: true,
     api_version: 'v1',
     auth_secret: 'kjsllwjkdal!kdkd_dks44AkfkA',
