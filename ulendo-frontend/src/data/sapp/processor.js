@@ -18,9 +18,10 @@ fs.readdirSync(folder + '/output/dam').forEach(file => {
 //############################################################################
 // Load hourly
 //############################################################################
+let start = DateTime.now()
 
 let hourly = []
-const folderPath = path.join(folder, 'input/dam/price_volume')
+const folderPath = path.join(folder, 'input/price_volume/dam')
 const files = fs.readdirSync(folderPath)
 files.forEach(file => {
   if (path.extname(file) === '.csv') {
@@ -64,10 +65,13 @@ hourly = hourly.map(h=>{
   }
   return h
 })
+console.log('Hourly load', DateTime.now() - start , 'ms')
 
 //############################################################################
 // Daily
 //############################################################################
+start = DateTime.now()
+
 
 const daily = d3.rollups(hourly, v=>{
   let ret = {
@@ -115,11 +119,14 @@ const daily = d3.rollups(hourly, v=>{
   return ret
 }, d=>d.dt.startOf('day')).map(v=>v[1])
 
+console.log('Daily', DateTime.now() - start , 'ms')
 
 //############################################################################
 // Weekly
 //############################################################################
+start = DateTime.now()
 
+/*
 const weekly = d3.rollups(hourly, v=>{
   let ret = {
     dt: v[0].dt.endOf('week'),
@@ -162,11 +169,13 @@ const weekly = d3.rollups(hourly, v=>{
   return ret
 
 }, d=>d.dt.endOf('week')).map(v=>v[1])
-
+*/
+console.log('Weekly', DateTime.now() - start , 'ms')
 
 //############################################################################
 // Monthly
 //############################################################################
+start = DateTime.now()
 
 const monthly = d3.rollups(hourly, v=>{
   let ret = {
@@ -228,9 +237,12 @@ const monthly = d3.rollups(hourly, v=>{
   return ret
 }, d=>d.dt.startOf('month')).map(v=>v[1])
 
+console.log('Monthly', DateTime.now() - start , 'ms')
+
 //############################################################################
 // Yearly
 //############################################################################
+start = DateTime.now()
 
 const yearly = d3.rollups(daily, v=>{
   let ret = {
@@ -249,15 +261,26 @@ const yearly = d3.rollups(daily, v=>{
   return ret
 }, d=>d.dt.startOf('year')).map(v=>v[1])
 
+console.log('Yearly', DateTime.now() - start , 'ms')
+
 //############################################################################
 // Hourly by calendar month
 //############################################################################
-let calMonthlyHours = processCalMonthlyHours(hourly)
+start = DateTime.now()
 
+//let calMonthlyHours = processCalMonthlyHours(hourly)
+//let calMonthlyHoursFrom2020 = processCalMonthlyHours(hourly.filter(d=>d.dt.year>=2020))
+//let calMonthlyHoursTo2020 = processCalMonthlyHours(hourly.filter(d=>d.dt.year<2020))
+/*
+yearly.map(y=>{
+  y.calMonthlyHours = processCalMonthlyHours(hourly.filter(d=>d.dt.year==y.year))
+})
+*/
 function processCalMonthlyHours(hours) {
+
   let mons = Array.from(new Array(12), (x,i) => i+1)
 
-  return mons.map(m=>{
+  mons = mons.map(m=>{
     return d3.rollups(hours.filter(d=>d.dt.month==m), v=>{
       let ret = {
         month: m,
@@ -267,24 +290,176 @@ function processCalMonthlyHours(hours) {
         priceDeviation: d3.deviation(v, d=>d.price).toPrecision(5),
         powerDeviationMW: d3.deviation(v, d=>d.volume).toPrecision(5),
       }
-      ret.priceCoefVar = ret.priceDeviation / ret.priceMean
-      ret.powerCoefVar = ret.powerDeviationMW / ret.powerMeanMW
+      ret.priceCoefVar = (ret.priceDeviation / ret.priceMean).toPrecision(5)
+      ret.powerCoefVar = (ret.powerDeviationMW / ret.powerMeanMW).toPrecision(5)
       return ret
     },v=>v.hour).map(v=>v[1])
   })
+  return mons.flat()
 }
+
+console.log('Calmonthly hours', DateTime.now() - start , 'ms')
+
+//############################################################################
+// Calendar months
+//############################################################################
+start = DateTime.now()
+
+//const calMonthly = processCalMonthly(hourly)
+//let calMonthlyFrom2020 = processCalMonthly(hourly.filter(d=>d.dt.year>=2020))
+//let calMonthlyTo2020 = processCalMonthly(hourly.filter(d=>d.dt.year<2020))
+
+function processCalMonthly(hours) {
+  const calmonthly = d3.rollups(hours, v=>{
+
+    let ret = {
+      month: v[0].dt.month,
+      priceMean: d3.mean(v, d=>d.price).toPrecision(5),
+      priceWeightedMean: (d3.sum(v, d=>d.value*1000)/d3.sum(v, d=>d.volume)).toPrecision(5),
+
+      powerMeanMW: d3.mean(v, d=>d.volume).toPrecision(5),
+
+    }
+    const offHours = v.filter(d=>d.category=='off')
+    ret.priceOffMean = d3.mean(offHours, d=>d.price).toPrecision(5)
+    ret.priceOffCoefVar = (d3.deviation(offHours, d=>d.price) / ret.priceOffMean).toPrecision(5)
+    ret.powerOffMeanMW = d3.mean(offHours, d=>d.volume).toPrecision(5)
+    ret.priceOffWeightedMean = (d3.sum(offHours, d=>d.value*1000)/d3.sum(offHours, d=>d.volume)).toPrecision(5)
+
+    const standardHours = v.filter(d=>d.category=='standard')
+    ret.priceStandardMean = d3.mean(standardHours, d=>d.price).toPrecision(5)
+    ret.priceStandardCoefVar = (d3.deviation(standardHours, d=>d.price) / ret.priceStandardMean).toPrecision(5)
+    ret.powerStandardMeanMW = d3.mean(standardHours, d=>d.volume).toPrecision(5)
+    ret.priceStandardWeightedMean = (d3.sum(standardHours, d=>d.value*1000)/d3.sum(standardHours, d=>d.volume)).toPrecision(5)
+
+    const morningHours = v.filter(d=>d.category=='morning')
+    ret.priceMorningMean = d3.mean(morningHours, d=>d.price).toPrecision(5)
+    ret.priceMorningCoefVar = (d3.deviation(morningHours, d=>d.price) / ret.priceMorningMean).toPrecision(5)
+    ret.powerMorningMeanMW = d3.mean(morningHours, d=>d.volume).toPrecision(5)
+    ret.priceMorningWeightedMean = (d3.sum(morningHours, d=>d.value*1000)/d3.sum(morningHours, d=>d.volume)).toPrecision(5)
+
+    const eveningHours = v.filter(d=>d.category=='evening')
+    ret.priceEveningMean = d3.mean(eveningHours, d=>d.price).toPrecision(5)
+    ret.priceEveningCoefVar = (d3.deviation(eveningHours, d=>d.price) / ret.priceMorningMean).toPrecision(5)
+    ret.powerEveningMeanMW = d3.mean(eveningHours, d=>d.volume).toPrecision(5)
+    ret.priceEveningWeightedMean = (d3.sum(eveningHours, d=>d.value*1000)/d3.sum(eveningHours, d=>d.volume)).toPrecision(5)
+
+    return ret
+  }, d=>d.dt.month).map(v=>v[1])
+
+  return calmonthly
+}
+
+console.log('Calmonthly', DateTime.now() - start , 'ms')
 
 //############################################################################
 // Save
 //############################################################################
+start = DateTime.now()
 
 daily.map(v=>{ delete v.dt })
-weekly.map(v=>{ delete v.dt })
+//weekly.map(v=>{ delete v.dt })
 monthly.map(v=>{ delete v.dt })
 yearly.map(v=>{ delete v.dt })
 
+/*
+yearly.map(y=>{
+  fs.writeFileSync(folder + `/output/dam/dam_calmonthlyhours_${ y.year }.csv`, d3.csvFormat(y.calMonthlyHours))
+  delete y.calMonthlyHours
+})
+  */
 fs.writeFileSync(folder + '/output/dam/dam_hourly.csv', d3.csvFormat(hourly))
 fs.writeFileSync(folder + '/output/dam/dam_daily.csv', d3.csvFormat(daily))
-fs.writeFileSync(folder + '/output/dam/dam_weekly.csv', d3.csvFormat(weekly))
+//fs.writeFileSync(folder + '/output/dam/dam_weekly.csv', d3.csvFormat(weekly))
 fs.writeFileSync(folder + '/output/dam/dam_monthly.csv', d3.csvFormat(monthly))
 fs.writeFileSync(folder + '/output/dam/dam_yearly.csv', d3.csvFormat(yearly))
+/*
+fs.writeFileSync(folder + '/output/dam/dam_calmonthly.csv', d3.csvFormat(calMonthly))
+fs.writeFileSync(folder + '/output/dam/dam_calmonthly_From2020.csv', d3.csvFormat(calMonthlyFrom2020))
+fs.writeFileSync(folder + '/output/dam/dam_calmonthly_To2020.csv', d3.csvFormat(calMonthlyTo2020))
+fs.writeFileSync(folder + '/output/dam/dam_calmonthlyhours.csv', d3.csvFormat(calMonthlyHours))
+fs.writeFileSync(folder + '/output/dam/dam_calmonthlyhours_From2020.csv', d3.csvFormat(calMonthlyHoursFrom2020))
+fs.writeFileSync(folder + '/output/dam/dam_calmonthlyhours_To2020.csv', d3.csvFormat(calMonthlyHoursTo2020))
+*/
+
+console.log('Save files', DateTime.now() - start , 'ms')
+
+//############################################################################
+//Load Flows
+//############################################################################
+start = DateTime.now()
+
+let flowsRaw = []
+const folderPathFlow = path.join(folder, 'input/flow/dam')
+const flowFiles = fs.readdirSync(folderPathFlow)
+
+let hourlyPointer = 0
+
+flowFiles.forEach(file => {
+  if (path.extname(file) === '.json') {
+    let records = JSON.parse(fs.readFileSync(path.join(folderPathFlow, file), 'utf-8'))
+    records=records.map(v => {
+      v.dt=DateTime.fromISO(v.date).plus({hours: v.hour})
+      v.datetime = v.dt.toISO()
+
+      while (v.datetime!=hourly[hourlyPointer].datetime) {  hourlyPointer += 1 }
+      v.price = hourly[hourlyPointer].price
+
+      v.value = v.price * v.flow
+      return v
+    })
+    flowsRaw=flowsRaw.concat(records)
+  }
+})
+
+console.log('Load raw flows', DateTime.now() - start , 'ms')
+
+//############################################################################
+//Process Flow Nodes
+//############################################################################
+start = DateTime.now()
+
+const flowTo = flowsRaw.map(f=>{
+  return {
+    date: f.date,
+    hour: f.hour,
+    flow: f.flow,
+    dt: f.dt,
+    datetime: f.datetime,
+    price: f.price,
+    value: f.value,
+    node: f.to
+  }
+})
+
+const flowFrom = flowsRaw.map(f=>{
+  return {
+    date: f.date,
+    hour: f.hour,
+    flow: -f.flow,
+    dt: f.dt,
+    datetime: f.datetime,
+    price: f.price,
+    value: -f.value,
+    node: f.from
+  }
+})
+
+let flows=flowTo.concat(flowFrom)
+
+flows = flows.map(f=>{
+  if (f.node=='ZIMA') { f.node='ZIM' }
+  if (f.node=='MOZN_EDM') { f.node='MOZ' }
+  if (f.node=='MOZN_HCB') { f.node='HCB' }
+  if (f.node=='MOZS') { f.node='MOZ' }
+  if (f.node=='RSAS') { f.node='RSA' }
+  if (f.node=='RSAN') { f.node='RSA' }
+
+  return f
+})
+
+
+
+
+console.log('Process flow nodes', DateTime.now() - start , 'ms')
+start = DateTime.now()
