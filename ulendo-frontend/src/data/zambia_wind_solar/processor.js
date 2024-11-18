@@ -105,7 +105,6 @@ const windCalmonthly = d3.rollups(windDaily, d  => {
   }
   ret.maxMonthlySpecificYield = ret.maxDailySpecificYield * monthDays[ret.month-1]//MWh/MW taking account of seasonality
 
-
   ret.meanMonthlySpecificYield = d3.mean(windMonthly.filter(v=>v.month==d[0].month),v=>v.monthlySpecificYield)
   ret.medianMonthlySpecificYield = d3.quantile(windMonthly.filter(v=>v.month==d[0].month),0.5,v=>v.monthlySpecificYield)
   ret.p90MonthlySpecificYield = d3.quantile(windMonthly.filter(v=>v.month==d[0].month),0.9,v=>v.monthlySpecificYield)
