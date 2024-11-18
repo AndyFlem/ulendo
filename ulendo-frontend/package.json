@@ -31,6 +31,7 @@
     "@eslint/js": "^9.13.0",
     "@rollup/plugin-dsv": "^3.0.5",
     "@vitejs/plugin-vue": "^5.1.4",
+    "csv": "^6.3.10",
     "eslint": "^9.13.0",
     "eslint-plugin-vue": "^9.29.0",
     "sass-embedded": "^1.80.4",
