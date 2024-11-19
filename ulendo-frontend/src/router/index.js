@@ -14,6 +14,16 @@ const pageGroups = [
     ]
   },
   {
+    name: 'SAPP',
+    title: 'SAPP',
+    pages:[
+      {
+        name: 'SAPP_DAM',
+        title: 'SAPP Day Ahead Market'
+      }
+    ]
+  },
+  {
     name: 'Lumwana',
     title: 'Lumwana',
     pages:[
@@ -67,6 +77,11 @@ const routes = [
     name: 'LumwanaSupplyDemand',
     meta: {groups:['barrick']},
     component: () => import(/* webpackChunkName: "lumwana-supply-demand" */ '@/pages/barrick/LumwanaSupplyDemand.vue'),
+  }, {
+    path: '/sapp/dam',
+    name: 'SAPP_DAM',
+    meta: {groups:['public']},
+    component: () => import(/* webpackChunkName: "sapp-dam" */ '@/pages/sapp/DAM.vue'),
   }
 ]
 

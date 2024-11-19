@@ -126,7 +126,7 @@ console.log('Daily', DateTime.now() - start , 'ms')
 //############################################################################
 start = DateTime.now()
 
-/*
+
 const weekly = d3.rollups(hourly, v=>{
   let ret = {
     dt: v[0].dt.endOf('week'),
@@ -169,7 +169,7 @@ const weekly = d3.rollups(hourly, v=>{
   return ret
 
 }, d=>d.dt.endOf('week')).map(v=>v[1])
-*/
+
 console.log('Weekly', DateTime.now() - start , 'ms')
 
 //############################################################################
@@ -225,6 +225,8 @@ const monthly = d3.rollups(hourly, v=>{
   const days = daily.filter(dy => dy.dt.month == v[0].dt.month && dy.dt.year == v[0].dt.year)
   ret.days = days.length
 
+  ret.priceDailyP10 =  d3.quantile(days, 0.1, v=>v.priceMean)
+  ret.priceDailyP90 =  d3.quantile(days, 0.9, v=>v.priceMean)
   ret.priceDailyMinMean = d3.min(days, d=>d.priceMean)
   ret.priceDailyMaxMean = d3.max(days, d=>d.priceMean)
 
@@ -257,6 +259,8 @@ const yearly = d3.rollups(daily, v=>{
   }
   const months = monthly.filter(m => m.dt.year == v[0].dt.year)
   ret.priceMonthlyMean = d3.mean(months, d=>d.priceMean).toPrecision(5)
+  ret.priceMaxP90 = d3.max(months, m=>m.priceDailyP90)
+  ret.priceMinP10 = d3.min(months, m=>m.priceDailyP10)
 
   return ret
 }, d=>d.dt.startOf('year')).map(v=>v[1])
@@ -268,14 +272,14 @@ console.log('Yearly', DateTime.now() - start , 'ms')
 //############################################################################
 start = DateTime.now()
 
-//let calMonthlyHours = processCalMonthlyHours(hourly)
-//let calMonthlyHoursFrom2020 = processCalMonthlyHours(hourly.filter(d=>d.dt.year>=2020))
-//let calMonthlyHoursTo2020 = processCalMonthlyHours(hourly.filter(d=>d.dt.year<2020))
-/*
+let calMonthlyHours = processCalMonthlyHours(hourly)
+let calMonthlyHoursFrom2020 = processCalMonthlyHours(hourly.filter(d=>d.dt.year>=2020))
+let calMonthlyHoursTo2020 = processCalMonthlyHours(hourly.filter(d=>d.dt.year<2020))
+
 yearly.map(y=>{
   y.calMonthlyHours = processCalMonthlyHours(hourly.filter(d=>d.dt.year==y.year))
 })
-*/
+
 function processCalMonthlyHours(hours) {
 
   let mons = Array.from(new Array(12), (x,i) => i+1)
@@ -305,9 +309,9 @@ console.log('Calmonthly hours', DateTime.now() - start , 'ms')
 //############################################################################
 start = DateTime.now()
 
-//const calMonthly = processCalMonthly(hourly)
-//let calMonthlyFrom2020 = processCalMonthly(hourly.filter(d=>d.dt.year>=2020))
-//let calMonthlyTo2020 = processCalMonthly(hourly.filter(d=>d.dt.year<2020))
+const calMonthly = processCalMonthly(hourly)
+let calMonthlyFrom2020 = processCalMonthly(hourly.filter(d=>d.dt.year>=2020))
+let calMonthlyTo2020 = processCalMonthly(hourly.filter(d=>d.dt.year<2020))
 
 function processCalMonthly(hours) {
   const calmonthly = d3.rollups(hours, v=>{
@@ -358,29 +362,28 @@ console.log('Calmonthly', DateTime.now() - start , 'ms')
 start = DateTime.now()
 
 daily.map(v=>{ delete v.dt })
-//weekly.map(v=>{ delete v.dt })
+weekly.map(v=>{ delete v.dt })
 monthly.map(v=>{ delete v.dt })
 yearly.map(v=>{ delete v.dt })
 
-/*
+
 yearly.map(y=>{
   fs.writeFileSync(folder + `/output/dam/dam_calmonthlyhours_${ y.year }.csv`, d3.csvFormat(y.calMonthlyHours))
   delete y.calMonthlyHours
 })
-  */
+
 fs.writeFileSync(folder + '/output/dam/dam_hourly.csv', d3.csvFormat(hourly))
 fs.writeFileSync(folder + '/output/dam/dam_daily.csv', d3.csvFormat(daily))
-//fs.writeFileSync(folder + '/output/dam/dam_weekly.csv', d3.csvFormat(weekly))
+fs.writeFileSync(folder + '/output/dam/dam_weekly.csv', d3.csvFormat(weekly))
 fs.writeFileSync(folder + '/output/dam/dam_monthly.csv', d3.csvFormat(monthly))
 fs.writeFileSync(folder + '/output/dam/dam_yearly.csv', d3.csvFormat(yearly))
-/*
 fs.writeFileSync(folder + '/output/dam/dam_calmonthly.csv', d3.csvFormat(calMonthly))
 fs.writeFileSync(folder + '/output/dam/dam_calmonthly_From2020.csv', d3.csvFormat(calMonthlyFrom2020))
 fs.writeFileSync(folder + '/output/dam/dam_calmonthly_To2020.csv', d3.csvFormat(calMonthlyTo2020))
 fs.writeFileSync(folder + '/output/dam/dam_calmonthlyhours.csv', d3.csvFormat(calMonthlyHours))
 fs.writeFileSync(folder + '/output/dam/dam_calmonthlyhours_From2020.csv', d3.csvFormat(calMonthlyHoursFrom2020))
 fs.writeFileSync(folder + '/output/dam/dam_calmonthlyhours_To2020.csv', d3.csvFormat(calMonthlyHoursTo2020))
-*/
+
 
 console.log('Save files', DateTime.now() - start , 'ms')
 
@@ -469,8 +472,6 @@ console.log('Process flow nodes', DateTime.now() - start , 'ms')
 //Net out transit flows
 //############################################################################
 start = DateTime.now()
-let bots = flows.filter(f=>f.node=='BOT' && f.dt.year==2016 && f.dt.month==1 && f.dt.hour==6)
-console.log(bots)
 
 const flowsNet = d3.rollups(flows, f=>{
   let ret = {
