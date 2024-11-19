@@ -404,6 +404,7 @@ flowFiles.forEach(file => {
 
       while (v.datetime!=hourly[hourlyPointer].datetime) {  hourlyPointer += 1 }
       v.price = hourly[hourlyPointer].price
+      v.category = hourly[hourlyPointer].category
 
       v.value = v.price * v.flow
       return v
@@ -426,22 +427,26 @@ const flowTo = flowsRaw.map(f=>{
     flow: f.flow,
     dt: f.dt,
     datetime: f.datetime,
-    price: f.price,
+    //price: f.price,
     value: f.value,
-    node: f.to
+    node: f.to,
+    side: 'consume',
+    category: f.category
   }
 })
 
 const flowFrom = flowsRaw.map(f=>{
   return {
+    dt: f.dt,
+    datetime: f.datetime,
     date: f.date,
     hour: f.hour,
     flow: -f.flow,
-    dt: f.dt,
-    datetime: f.datetime,
-    price: f.price,
+    //price: f.price,
     value: -f.value,
-    node: f.from
+    node: f.from,
+    side: 'supply',
+    category: f.category
   }
 })
 
@@ -458,8 +463,54 @@ flows = flows.map(f=>{
   return f
 })
 
-
-
-
 console.log('Process flow nodes', DateTime.now() - start , 'ms')
+
+//############################################################################
+//Net out transit flows
+//############################################################################
 start = DateTime.now()
+let bots = flows.filter(f=>f.node=='BOT' && f.dt.year==2016 && f.dt.month==1 && f.dt.hour==6)
+console.log(bots)
+
+const flowsNet = d3.rollups(flows, f=>{
+  let ret = {
+      dt: f[0].dt,
+      datetime: f[0].datetime,
+      date: f[0].date,
+      hour: f[0].hour,
+      flow: d3.sum(f, v=>v.flow),
+      //price: f[0].price
+      value: d3.sum(f, v=>v.value),
+      category: f[0].category,
+      node: f[0].node
+  }
+  ret.price = ret.value / ret.flow
+  ret.flow <0 ? ret.side = 'supply' : ret.side = 'consume'
+  return ret
+}, d=>d.node + d.category + d.dt.toISO()).map(v=>v[1]).filter(v=>v.value!=0)
+
+
+console.log('Net off flows', DateTime.now() - start , 'ms')
+
+//############################################################################
+//Monthly flows
+//############################################################################
+start = DateTime.now()
+
+const flowsMonthly = d3.rollups(flowsNet, f=>{
+  let ret = {
+    month: f[0].dt.month,
+    year: f[0].dt.year,
+    node: f[0].node,
+    flow: d3.sum(f, v=>v.flow),
+    value: d3.sum(f, v=>v.value),
+    side: f[0].side,
+    category: f[0].category,
+    key: f[0].dt.startOf('month').toISODate() + f[0].node + f[0].category + f[0].side
+  }
+  ret.price=ret.value/ret.flow
+  return ret
+}, d => d.dt.startOf('month').toISODate() + d.node + d.category+ d.side).map(v=>v[1]).sort((a,b)=>a.key.localeCompare(b.key))
+
+
+fs.writeFileSync(folder + '/output/dam/dam_flows_monthly.csv', d3.csvFormat(flowsMonthly))
