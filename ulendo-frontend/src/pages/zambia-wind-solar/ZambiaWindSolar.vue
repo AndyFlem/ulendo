@@ -79,7 +79,6 @@
 
   const optimumCombination=combinationModels.filter(w=>w.store_max==min(combinationModels.map(v=>v.store_max)))[0]
 
-
   const specificCapitalCost = { // $m per MW
     solar: 1.5,
     wind: 2,

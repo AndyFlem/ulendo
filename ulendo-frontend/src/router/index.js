@@ -20,6 +20,10 @@ const pageGroups = [
       {
         name: 'SAPP_DAM',
         title: 'SAPP Day Ahead Market'
+      },
+      {
+        name: 'SolarBenchmark',
+        title: 'SAPP Solar Benchmark Price'
       }
     ]
   },
@@ -82,6 +86,11 @@ const routes = [
     name: 'SAPP_DAM',
     meta: {groups:['public']},
     component: () => import(/* webpackChunkName: "sapp-dam" */ '@/pages/sapp/DAM.vue'),
+  }, {
+    path: '/sapp/solar-benchmark',
+    name: 'SolarBenchmark',
+    meta: {groups:['public']},
+    component: () => import(/* webpackChunkName: "sapp-dam" */ '@/pages/sapp/SolarBenchmark.vue'),
   }
 ]
 

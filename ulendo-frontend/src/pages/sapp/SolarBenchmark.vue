@@ -1,11 +1,10 @@
 <script setup>
   import {  inject, computed } from 'vue'
   import { useDisplay } from 'vuetify'
-  //import {  max } from 'd3-array'
-  import { DateTime } from 'luxon'
+  //import { DateTime } from 'luxon'
+  import { min, max } from 'd3-array'
   //import { groups, min, max, mean, sum } from 'd3-array'
-  import { format } from 'd3-format'
-  import {schemeCategory10} from 'd3-scale-chromatic'
+  //import { format } from 'd3-format'
 
   import PlotlyChart from '@/components/PlotlyChart.vue'
 
@@ -13,23 +12,58 @@
 
   import PresentationPage from '@/components/PresentationPage.vue'
 
-  //const colors = inject('colors')
+  const colors = inject('colors')
   const font = inject('font')
   //const makeTrans = inject('makeTrans')
   //const months = inject('months')
 
   import damMonthly from '@/data/sapp/output/dam/dam_monthly.csv'
-  import damYealry from '@/data/sapp/output/dam/dam_yearly.csv'
-  const cats = {
-    Evening: { index: 3, name: 'Evening', ref: 'Evening', long_name: 'Evening Peak'},
-    Morning: { index: 1, name: 'Morning', ref: 'Morning', long_name: 'Morning Peak'},
-    Standard: {index: 2, name: 'Standard', ref: 'Standard', long_name: 'Daytime Standard'},
-    Off: {index: 0, name: 'Off-peak', ref: 'Off', long_name: 'Night Off-peak'},
-  }
-  function catCol(index) {
-    return schemeCategory10[index]
-  }
+  //import damYealry from '@/data/sapp/output/dam/dam_yearly.csv'
+  import monthlySolarBenchmark from '@/data/sapp_benchmarks/output/monthlySolarBenchmarkPrice.csv'
 
+  const chartSolarBenchmark = computed(() => {
+    var data = [
+      {
+        y: monthlySolarBenchmark.map(d=>d.priceMean),
+        x: monthlySolarBenchmark.map(d=>d.date),
+        mode: 'lines+markers', line: {shape: '', color: colors.solar[1], width: 1.5},
+        type: 'scatter', showlegend:true, fill:'tozeroy',  name:'Solar Benchmark Price',
+        hovertemplate: "<b>%{x}</b><br>" +
+          "%{y:,.0f} %{yaxis.title.text}" +
+          "<extra></extra>",
+      }
+    ]
+
+    data.push({
+      y: damMonthly.map(m=>m.priceMean),
+      x: damMonthly.map(m=>m.datetime),
+      mode: 'lines+markers', line: {shape: '', color: '#444', width: 1}, marker:{size:2},
+      type: 'scatter', showlegend:true, fill:'', name:'SAPP DAM Average Price',
+      hovertemplate: "<b>%{x}</b><br>" +
+        "%{y:,.0f} %{yaxis.title.text}" +
+        "<extra></extra>",
+    })
+
+
+    var layout = {
+      height: 300,
+      font: font,
+      showlegend: true, legend: {orientation: 'h',xanchor: 'left', x:0, y: 1},
+      margin: {l: 70,r: 5,b: 30,t: 0},
+      xaxis: {
+        showgrid: true, zeroline: false, ticks: 'outside',
+        range:[min(monthlySolarBenchmark, d=>d.date),max(monthlySolarBenchmark, d=>d.date)]
+      },
+      yaxis: {
+        range: [20,230],
+        title: `$/MWh`,
+        showgrid: true, zeroline: false, tickformat: '.0f', ticks:'outside'
+      }
+    }
+    return {data, layout , config: {displayModeBar: false}}
+  })
+
+  /*
   const chartDAMonthlyAnnualPrice = computed(() => {
     var data = []
 
@@ -78,43 +112,8 @@
 
     return {data, layout , config: {displayModeBar: false}}
   })
+*/
 
-  const chartDAMonthlyCatPrice = computed(() => {
-
-  function mon(ref) {
-    console.log('price' + ref + 'Mean')
-    console.log(damMonthly.map(m=>m['price' + ref + 'Mean']))
-    return {
-      y: damMonthly.map(m=>m['price' + ref + 'Mean']),
-      x: damMonthly.map(m=>m.datetime),
-      mode: 'lines+markers', line: {shape:'',color: catCol(cats[ref].index), width: 1.5}, marker:{size:3},
-      type: 'scatter', hoverinfo: 'none', name: cats[ref].name, showlegend:true, connectgaps: false
-    }
-  }
-
-  var data = []
-
-  Object.values(cats).forEach(c=>{
-    data.push(mon(c.ref))
-  })
-
-  var layout = {
-    height: 300,
-    font: font,
-    showlegend: true, legend: {orientation:'h',xanchor: 'left', x:0, y: 1},
-    margin: {l: 50,r: 5,b: 30,t: 0},
-    xaxis: {
-      showgrid: true, zeroline: false, ticks:'outside',
-    },
-    yaxis: {
-      title: '$/MWh',
-
-      showgrid: true, zeroline: false, tickformat: '.0f', ticks:'outside'
-    }
-  }
-  return {data, layout , config: {displayModeBar: false}}
-
-})
 
 </script>
 
@@ -123,19 +122,13 @@
     <v-row :class="!smAndUp?'ma-0 pa-0':'pa-5'">
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet class="border ma-0 pa-0">
-          <PlotlyChart :definition="chartDAMonthlyAnnualPrice" />
+          <PlotlyChart :definition="chartSolarBenchmark" />
           <figcaption>
-            Average daily prices by month and year for the SAP DAM Market.
-            Price variability in each year represented by the area between the maximum monthly P90 and minimum monthly P10 daily prices.
+
           </figcaption>
         </v-sheet>
       </v-col>
-      <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
-        <v-sheet class="border ma-0 pa-0">
-          <PlotlyChart :definition="chartDAMonthlyCatPrice" />
-          <figcaption></figcaption>
-        </v-sheet>
-      </v-col>
+
     </v-row>
   </PresentationPage>
 </template>
