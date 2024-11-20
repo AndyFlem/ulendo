@@ -120,6 +120,13 @@
 <template>
   <PresentationPage>
     <v-row :class="!smAndUp?'ma-0 pa-0':'pa-5'">
+      <v-col cols="12">
+        The <b>SAPP Solar Benchmark</b> is a reference price (in $/MWh) that would be achieved by a nominal grid-connected solar PV plant
+        that sells all of its energy on the <a href="/sapp/dam">Southern African Power Pool (SAPP) Day-ahead Market (DAM)</a>.
+        <br><br>
+        The SAPP Solar Benchmark is calculated by combining the hourly settlement price of the SAPP DAM market with the hourly
+        relative output of a solar PV plant located in Western Zambia.
+      </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet class="border ma-0 pa-0">
           <PlotlyChart :definition="chartSolarBenchmark" />
