@@ -7,12 +7,15 @@ import { DateTime } from 'luxon'
 const folder = path.dirname(fileURLToPath(import.meta.url))
 
 // Delete all files in the output folder
-fs.readdirSync(folder + '/output/dam').forEach(file => {
-  fs.unlink(folder + '/output/dam/' + file, (err) => {
-    if (err) {
-      console.error(err)
-    }
-  })
+fs.readdirSync(folder + '/output/dam', {recursive: true}).forEach(file => {
+  // if the file is not a folder
+  if (fs.lstatSync(folder + '/output/dam/' + file).isFile()) {
+    fs.unlink(folder + '/output/dam/' + file, (err) => {
+      if (err) {
+        console.error(err)
+      }
+    })
+  }
 })
 
 //############################################################################
@@ -66,6 +69,18 @@ hourly = hourly.map(h=>{
   return h
 })
 console.log('Hourly load', DateTime.now() - start , 'ms')
+
+
+//############################################################################
+//Save hourly price and volue by month
+//############################################################################
+start = DateTime.now()
+
+d3.groups(hourly, v=>v.dt.startOf('month')).forEach(m=>{
+  fs.writeFileSync(folder + `/output/dam/months/dam_${m[0].year}_${m[0].month}_hourly.csv`, d3.csvFormat(m[1]))
+})
+
+console.log('Save hourly price', DateTime.now() - start , 'ms')
 
 //############################################################################
 // Daily
@@ -515,3 +530,5 @@ const flowsMonthly = d3.rollups(flowsNet, f=>{
 
 
 fs.writeFileSync(folder + '/output/dam/dam_flows_monthly.csv', d3.csvFormat(flowsMonthly))
+
+console.log('Monthly flows', DateTime.now() - start , 'ms')

@@ -5,7 +5,6 @@
   import { DateTime } from 'luxon'
   //import { groups, min, max, mean, sum } from 'd3-array'
   import { format } from 'd3-format'
-  import {schemeCategory10} from 'd3-scale-chromatic'
 
   import PlotlyChart from '@/components/PlotlyChart.vue'
 
@@ -14,21 +13,14 @@
   import PresentationPage from '@/components/PresentationPage.vue'
 
   //const colors = inject('colors')
-  const font = inject('font')
+  const font = inject('font')(smAndUp)
   //const makeTrans = inject('makeTrans')
   //const months = inject('months')
 
+  const categories = inject('sappDAMCategories')
+
   import damMonthly from '@/data/sapp/output/dam/dam_monthly.csv'
   import damYealry from '@/data/sapp/output/dam/dam_yearly.csv'
-  const cats = {
-    Evening: { index: 3, name: 'Evening', ref: 'Evening', long_name: 'Evening Peak'},
-    Morning: { index: 1, name: 'Morning', ref: 'Morning', long_name: 'Morning Peak'},
-    Standard: {index: 2, name: 'Standard', ref: 'Standard', long_name: 'Daytime Standard'},
-    Off: {index: 0, name: 'Off-peak', ref: 'Off', long_name: 'Night Off-peak'},
-  }
-  function catCol(index) {
-    return schemeCategory10[index]
-  }
 
   const chartDAMonthlyAnnualPrice = computed(() => {
     var data = []
@@ -87,14 +79,14 @@
     return {
       y: damMonthly.map(m=>m['price' + ref + 'Mean']),
       x: damMonthly.map(m=>m.datetime),
-      mode: 'lines+markers', line: {shape:'',color: catCol(cats[ref].index), width: 1.5}, marker:{size:3},
-      type: 'scatter', hoverinfo: 'none', name: cats[ref].name, showlegend:true, connectgaps: false
+      mode: 'lines+markers', line: {shape:'',color: categories[ref].color, width: 1.5}, marker:{size:3},
+      type: 'scatter', hoverinfo: 'none', name: categories[ref].name, showlegend:true, connectgaps: false
     }
   }
 
   var data = []
 
-  Object.values(cats).forEach(c=>{
+  Object.values(categories).forEach(c=>{
     data.push(mon(c.ref))
   })
 

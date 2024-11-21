@@ -33,7 +33,6 @@ const solarCalmonthlyTotals = d3.rollups(solarCalmonthlyHours, v => {
   }
 },v=>v.month).map(v=>v[1])
 
-
 const hourlyWeightedPrice = damHourly.map(v=> {
   const factor = solarCalmonthlyHours.find(d=>
     d.month == v.month &&
@@ -63,7 +62,7 @@ let monthlyPrice = d3.rollups(dailyPrice, v => {
     priceMean: d3.mean(v, d => d.price),
     DAMPriceMean: damMonthly.find(d=>d.month==v[0].luxdate.month && d.year==v[0].luxdate.year).priceMean
   }
-  ret.solarPriceRelativeDAM = ret.priceMean / ret.DAMPriceMean
+  ret.solarPriceRelativeDAM = (ret.priceMean-ret.DAMPriceMean) / ret.DAMPriceMean
   return ret
 }, v => v.luxdate.startOf('month')).map(v=>v[1])
 
