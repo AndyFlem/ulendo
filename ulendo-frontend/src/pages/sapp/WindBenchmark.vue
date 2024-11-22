@@ -19,7 +19,7 @@
 
   //import damMonthly from '@/data/sapp/output/dam/dam_monthly.csv'
   import damDaily_raw from '@/data/sapp/output/dam/dam_daily.csv'
-  import solarDiurnal from '@/data/zambia_wind_solar/output/solarDiurnal.csv'
+  import windDiurnal from '@/data/zambia_wind_solar/output/windDiurnal.csv'
 
   const damDaily=damDaily_raw.map(d=>{
     d.dt=DateTime.fromJSDate(d.datetime)
@@ -29,9 +29,9 @@
 
     return d
   })
-  import monthlySolarBenchmark from '@/data/sapp_benchmarks/output/monthlySolarBenchmarkPrice.csv'
-  const latestMonthlySolarBenchmark = monthlySolarBenchmark[monthlySolarBenchmark.length-1]
-  import dailySolarBenchmark from '@/data/sapp_benchmarks/output/dailySolarBenchmarkPrice.csv'
+  import monthlyWindBenchmark from '@/data/sapp_benchmarks/output/monthlyWindBenchmarkPrice.csv'
+  const latestMonthlyWindBenchmark = monthlyWindBenchmark[monthlyWindBenchmark.length-1]
+  import dailyWindBenchmark from '@/data/sapp_benchmarks/output/dailyWindBenchmarkPrice.csv'
 
   import damHourlyJan2024 from '@/data/sapp/output/dam/months/dam_2024_1_hourly.csv'
   import damHourlyJuly2023 from '@/data/sapp/output/dam/months/dam_2023_7_hourly.csv'
@@ -44,13 +44,13 @@
   const damCalmonthlyHours_2023 = groups(damCalmonthlyHours_2023_raw, d => d.month).map(v=>v[1])
 
 
-  const chartSolarBenchmarkMonthly = computed(() => {
+  const chartWindBenchmarkMonthly = computed(() => {
     var data = [
       {
-        y: monthlySolarBenchmark.map(d=>d.priceMean),
-        x: monthlySolarBenchmark.map(d=>d.date),
-        mode: 'lines+markers', line: {shape: '', color: colors.solar[1], width: 1.5},
-        type: 'scatter', showlegend:true, fill:'tozeroy',  name:'Solar Benchmark Price',
+        y: monthlyWindBenchmark.map(d=>d.priceMean),
+        x: monthlyWindBenchmark.map(d=>d.date),
+        mode: 'lines+markers', line: {shape: '', color: colors.wind[1], width: 1.5},
+        type: 'scatter', showlegend:true, fill:'tozeroy',  name:'Wind Benchmark Price',
         hovertemplate: "<b>%{x}</b><br>" +
           "%{y:,.0f} %{yaxis.title.text}" +
           "<extra></extra>",
@@ -58,8 +58,8 @@
     ]
 
     data.push({
-      y: monthlySolarBenchmark.map(m=>m.DAMPriceMean),
-      x: monthlySolarBenchmark.map(m=>m.date),
+      y: monthlyWindBenchmark.map(m=>m.DAMPriceMean),
+      x: monthlyWindBenchmark.map(m=>m.date),
       mode: 'lines', line: {shape: '', color: '#444', width: 1}, marker:{size:2},
       type: 'scatter', showlegend:true, fill:'', name:'SAPP DAM Average Price',
       hovertemplate: "<b>%{x}</b><br>" +
@@ -74,7 +74,7 @@
       margin: {l: 70,r: 5,b: 30,t: 0},
       xaxis: {
         showgrid: true, zeroline: false, ticks: 'outside',
-        range:[min(monthlySolarBenchmark, d=>d.date),max(monthlySolarBenchmark, d=>d.date)]
+        range:[min(monthlyWindBenchmark, d=>d.date),max(monthlyWindBenchmark, d=>d.date)]
       },
       yaxis: {
         range: [20,230],
@@ -85,13 +85,13 @@
     return {data, layout , config: {displayModeBar: false}}
   })
 
-  const chartSolarBenchmarkRelativeDAM = computed(() => {
+  const chartWindBenchmarkRelativeDAM = computed(() => {
     var data = [
       {
-        y: monthlySolarBenchmark.map(d=>d.solarPriceRelativeDAM),
-        x: monthlySolarBenchmark.map(d=>d.date),
-        marker: {color: makeTrans(colors.solar[1],0.7)},
-        type: 'bar', showlegend:false, fill:'tozeroy', name:'APP Wind Benchmark',
+        y: monthlyWindBenchmark.map(d=>d.windPriceRelativeDAM),
+        x: monthlyWindBenchmark.map(d=>d.date),
+        marker: {color: makeTrans(colors.wind[1],0.7)},
+        type: 'bar', showlegend:false, fill:'tozeroy', name:'SAPP Wind Benchmark',
         hovertemplate: "<b>%{x}</b><br>" +
           "%{y:.0%} %{yaxis.title.text}" +
           "<extra></extra>",
@@ -105,10 +105,10 @@
       margin: {l: 70,r: 5,b: 30,t: 0},
       xaxis: {
         showgrid: true, zeroline: false, ticks: 'outside',
-        range:[min(monthlySolarBenchmark, d=>d.date),max(monthlySolarBenchmark, d=>d.date)+20]
+        range:[min(monthlyWindBenchmark, d=>d.date),max(monthlyWindBenchmark, d=>d.date) + 20]
       },
       yaxis: {
-        title: `Difference`,
+        title: `Difference`, range:[-0.18,0.18],
         showgrid: true, zeroline: false, tickformat: '.0%', ticks:'outside'
       }
     }
@@ -175,12 +175,12 @@
     return {data, layout , config: {displayModeBar: false}}
   }
 
-  const chartSolarDiurnalDAM = computed(() => {
+  const chartWindDiurnalDAM = computed(() => {
     var data = [ {
-      y: solarDiurnal.map(v=>v.capFactor),
+      y: windDiurnal.map(v=>v.capFactor),
       x: [...Array(24).keys()].map(v=>v),
-      name: 'Solar Output',
-      mode: 'lines',   line: {shape:'spline', width:4,color: colors.solar[1]}, fill:'tozeroy',
+      name: 'Wind Output',
+      mode: 'lines',   line: {shape:'spline', width:4,color: colors.wind[1]}, fill:'tozeroy',
       type: 'scatter', showlegend:true, hoverinfo:'x+y', textposition:'top-center'
     },
     {
@@ -208,7 +208,7 @@
         showgrid: false, zeroline: false, ticks:'outside', dtick:2,title:'Hour'
       },
       yaxis: {
-        title: 'Solar <br>Output',
+        title: 'Wind <br>Output',
         showgrid: false, zeroline: false, tickformat: ',.0%', ticks:'outside', range:[-0.02,1.05],dtick:0.2
       },
       yaxis2: {
@@ -219,13 +219,13 @@
     return {data, layout , config: {displayModeBar: false}}
   })
 
-  const chartSolarBenchmarkDaily = computed(() => {
+  const chartWindBenchmarkDaily = computed(() => {
     var data = [
       {
-        y: dailySolarBenchmark.map(d=>d.price),
-        x: dailySolarBenchmark.map(d=>d.date),
-        mode: 'lines', line: {shape: '', color: colors.solar[1], width: 0.5},
-        type: 'scatter', showlegend:true, fill:'tozeroy',  name:'Solar Benchmark Price',
+        y: dailyWindBenchmark.map(d=>d.price),
+        x: dailyWindBenchmark.map(d=>d.date),
+        mode: 'lines', line: {shape: '', color: colors.wind[1], width: 0.5},
+        type: 'scatter', showlegend:true, fill:'tozeroy',  name:'Wind Benchmark Price',
         hovertemplate: "<b>%{x}</b><br>" +
           "%{y:,.0f} %{yaxis.title.text}" +
           "<extra></extra>",
@@ -238,7 +238,7 @@
       margin: {l: 70,r: 5,b: 25,t: 0},
       xaxis: {
         showgrid: true, zeroline: false, ticks: 'outside',
-        range:[min(dailySolarBenchmark, d=>d.date),max(dailySolarBenchmark, d=>d.date)]
+        range:[min(dailyWindBenchmark, d=>d.date),max(dailyWindBenchmark, d=>d.date)]
       },
       yaxis: {
         range: [20,280],
@@ -254,42 +254,42 @@
   <PresentationPage>
     <v-row :class="!smAndUp?'ma-0 pa-0':'pa-5'">
       <v-col cols="12">
-        The <b>SAPP Solar Benchmark</b> is a reference price (in $/MWh) that would be achieved by a nominal grid-connected solar PV plant
+        The <b>SAPP Wind Benchmark</b> is a reference price (in $/MWh) that would be achieved by a nominal grid-connected wind PV plant
         that sells all of its energy on the <a href="/sapp/dam">Southern African Power Pool (SAPP) Day-ahead Market (DAM)</a>.
         <br><br>
-        The SAPP Solar Benchmark is calculated by combining the hourly settlement price of the SAPP DAM market with the hourly
-        relative output of a solar PV plant located in Western Zambia.
+        The SAPP Wind Benchmark is calculated by combining the hourly settlement price of the SAPP DAM market with the hourly
+        relative output of a wind PV plant located in Western Zambia.
       </v-col>
       <v-col cols="12">
-        The SAPP Solar Benchmark price for <b>{{ DateTime.fromJSDate(latestMonthlySolarBenchmark.date).toFormat('LLLL yyyy') }}</b> is <b>${{ format(',.0f')( latestMonthlySolarBenchmark.priceMean ) }}/MWh.</b>
+        The SAPP Wind Benchmark price for <b>{{ DateTime.fromJSDate(latestMonthlyWindBenchmark.date).toFormat('LLLL yyyy') }}</b> is <b>${{ format(',.0f')( latestMonthlyWindBenchmark.priceMean ) }}/MWh.</b>
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet class="border ma-0 pa-0">
-          <PlotlyChart :definition="chartSolarBenchmarkDaily" />
+          <PlotlyChart :definition="chartWindBenchmarkDaily" />
           <figcaption>
-            Daily SAPP Solar Benchmark Price
+            Daily SAPP Wind Benchmark Price
           </figcaption>
         </v-sheet>
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet class="border ma-0 pa-0">
-          <PlotlyChart :definition="chartSolarBenchmarkMonthly" />
+          <PlotlyChart :definition="chartWindBenchmarkMonthly" />
           <figcaption>
-            Monthly average SAPP Solar Benchmark Price and SAPP DAM market price.
+            Monthly average SAPP Wind Benchmark Price and SAPP DAM market price.
           </figcaption>
         </v-sheet>
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet class="border ma-0 pa-0">
-          <PlotlyChart :definition="chartSolarBenchmarkRelativeDAM" />
+          <PlotlyChart :definition="chartWindBenchmarkRelativeDAM" />
           <figcaption>
-            Percentage difference between the SAPP Solar Benchmark and the SAPP DAM Average Price.
+            Percentage difference between the SAPP Wind Benchmark and the SAPP DAM Average Price.
           </figcaption>
         </v-sheet>
       </v-col>
       <v-col cols="12">
-        Prior to 2020 the SAPP Solar Benchmark was consistently higher than the SAPP DAM Average Price by between 10 - 20%.
-        Since then, the SAPP Solar Benchmark has trended lower compared to the SAPP DAM Average Price until through 2023 it was consistently
+        Prior to 2020 the SAPP Wind Benchmark was consistently higher than the SAPP DAM Average Price by between 10 - 20%.
+        Since then, the SAPP Wind Benchmark has trended lower compared to the SAPP DAM Average Price until through 2023 it was consistently
         15 - 25% below the market.
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="6">
@@ -309,19 +309,19 @@
         </v-sheet>
       </v-col>
       <v-col cols="12">
-        The relative value of SAPP Solar Benchmark and the DAM Market price in these periods has primarily been driven by the relative price of standard,
+        The relative value of SAPP Wind Benchmark and the DAM Market price in these periods has primarily been driven by the relative price of standard,
         daytime energy on the SAPP DAM market compared to the price of morning and evening peak price energy.
         <br><br>
         In January 2024,
-        for example, the SAPP Solar Benchmark rose to over 40% above the SAPP DAM Average Price due to a spike in the price
+        for example, the SAPP Wind Benchmark rose to over 40% above the SAPP DAM Average Price due to a spike in the price
         of standard, daytime energy on the SAPP DAM market along with relatively low evening, peak prices.
 
-        In July 2023, by contrast, a well developed morning peak price and a relatively low standard, daytime price led to the SAPP Solar Benchmark being
+        In July 2023, by contrast, a well developed morning peak price and a relatively low standard, daytime price led to the SAPP Wind Benchmark being
         26% below the average SAPP DAM price.
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="6">
         <v-sheet class="border ma-0 pa-0">
-          <PlotlyChart :definition="chartSolarDiurnalDAM" />
+          <PlotlyChart :definition="chartWindDiurnalDAM" />
           <figcaption>
 
           </figcaption>

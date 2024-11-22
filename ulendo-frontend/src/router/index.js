@@ -24,6 +24,10 @@ const pageGroups = [
       {
         name: 'SolarBenchmark',
         title: 'SAPP Solar Benchmark Price'
+      },
+      {
+        name: 'WindBenchmark',
+        title: 'SAPP Wind Benchmark Price'
       }
     ]
   },
@@ -91,6 +95,11 @@ const routes = [
     name: 'SolarBenchmark',
     meta: {groups:['public']},
     component: () => import(/* webpackChunkName: "sapp-dam" */ '@/pages/sapp/SolarBenchmark.vue'),
+  }, {
+    path: '/sapp/wind-benchmark',
+    name: 'WindBenchmark',
+    meta: {groups:['public']},
+    component: () => import(/* webpackChunkName: "sapp-dam" */ '@/pages/sapp/WindBenchmark.vue'),
   }
 ]
 
