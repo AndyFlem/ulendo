@@ -8,6 +8,6 @@
 
 #nodemon --watch ./src/data/kalumbila/input --watch ./src/data/kalumbila/processor.js -e js,csv --verbose ./src/data/kalumbila/processor.js &
 
-nodemon --watch ./src/data/sapp/input --watch ./src/data/sapp/processor.js -e js,csv --verbose ./src/data/sapp/processor.js &
+#nodemon --watch ./src/data/sapp/input --watch ./src/data/sapp/processor.js -e js,csv --verbose ./src/data/sapp/processor.js &
 
-#nodemon --watch ./src/data/sapp_benchmarks/input --watch ./src/data/sapp_benchmarks/processor.js -e js,csv --verbose ./src/data/sapp_benchmarks/processor.js &
+nodemon --watch ./src/data/sapp_benchmarks/input --watch ./src/data/sapp_benchmarks/processor.js -e js,csv --verbose ./src/data/sapp_benchmarks/processor.js &

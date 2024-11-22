@@ -22,6 +22,7 @@
   import windCalmonthly from '@/data/zambia_wind_solar/output/windCalmonthly.csv'
   import windCalmonthlyHours_raw from '@/data/zambia_wind_solar/output/windCalmonthlyHours.csv'
 
+
   const windCalmonthlyHours = groups(windCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
 

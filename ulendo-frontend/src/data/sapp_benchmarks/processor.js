@@ -22,10 +22,10 @@ const damHourly = d3.csvParse(fs.readFileSync(folder + '/../sapp/output/dam/dam_
 const damMonthly = d3.csvParse(fs.readFileSync(folder + '/../sapp/output/dam/dam_monthly.csv', 'utf-8'), d3.autoType).map(v=> {
   return v
 })
+
 const solarCalmonthlyHours = d3.csvParse(fs.readFileSync(folder + '/../zambia_wind_solar/output/solarCalmonthlyHours.csv', 'utf-8'), d3.autoType).map(v=> {
   return v
 })
-
 const solarCalmonthlyTotals = d3.rollups(solarCalmonthlyHours, v => {
   return {
     month: v[0].month,
@@ -41,18 +41,22 @@ const hourlyWeightedPrice = damHourly.map(v=> {
   let ret = {
     date:v.date,
     luxdate: DateTime.fromJSDate(v.date),
-    weightedPrice: factor * v.price
+    weightedPrice: factor * v.price,
+    DAMPrice: v.price
   }
 
   return ret
 })
 
-const dailyPrice = d3.rollups(hourlyWeightedPrice, v => {
-  return {
+let dailyPrice = d3.rollups(hourlyWeightedPrice, v => {
+  const ret = {
     date: v[0].date,
     luxdate: v[0].luxdate,
+    DAMPriceMean: d3.mean(v, d => d.DAMPrice),
     price: d3.sum(v, d => d.weightedPrice)
   }
+  ret.solarPriceRelativeDAM = (ret.price-ret.DAMPriceMean) / ret.DAMPriceMean
+  return ret
 }, v => v.date).map(v=>v[1])
 
 let monthlyPrice = d3.rollups(dailyPrice, v => {
@@ -82,6 +86,11 @@ const yearlyPrice = d3.rollups(dailyPrice, v => {
   }
 }, v => v.luxdate.startOf('year')).map(v=>v[1])
 
+dailyPrice.map(d=>{delete d.luxdate})
+monthlyPrice.map(d=>{delete d.luxdate})
+yearlyPrice.map(d=>{delete d.luxdate})
+
+fs.writeFileSync(folder + '/output/dailySolarBenchmarkPrice.csv', d3.csvFormat(dailyPrice))
 fs.writeFileSync(folder + '/output/monthlySolarBenchmarkPrice.csv', d3.csvFormat(monthlyPrice))
 fs.writeFileSync(folder + '/output/yearlySolarBenchmarkPrice.csv', d3.csvFormat(yearlyPrice))
 
