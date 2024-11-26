@@ -35,7 +35,6 @@ fs.writeFileSync(folder + '/output/parameters.json', JSON.stringify(params, null
 //****************************************************************
 // Wind data processing
 //****************************************************************
-
 const unikaHourly = d3.csvParse(fs.readFileSync(folder + '/input/unika_180mw_yield.csv', 'utf-8'), d3.autoType).map(v=> {
   v.date=DateTime.fromObject({year:v.year,month:v.month,day:v.day, hour: v.hour})
   v.energyMWh=parseFloat(v.mwh)/180*params.capacityWindMW

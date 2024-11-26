@@ -13,18 +13,15 @@
   const colors = inject('colors')
   const makeTrans = inject('makeTrans')
 
-  import windDiurnal from '@/data/zambia_wind_solar/output/windDiurnal.csv'
-  import solarDiurnal from '@/data/zambia_wind_solar/output/solarDiurnal.csv'
-  import solarCalmonthly from '@/data/zambia_wind_solar/output/solarCalmonthly.csv'
-  import solarCalmonthlyHours_raw from '@/data/zambia_wind_solar/output/solarCalmonthlyHours.csv'
+  import solarDiurnal from '@/data/ilute/output/iluteDiurnal.csv'
+  import solarCalmonthly from '@/data/ilute/output/iluteCalmonthly.csv'
+  import solarCalmonthlyHours_raw from '@/data/ilute/output/iluteCalmonthlyHours.csv'
   const solarCalmonthlyHours = groups(solarCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
+  import windDiurnal from '@/data/zambia_wind_solar/output/windDiurnal.csv'
   import windCalmonthly from '@/data/zambia_wind_solar/output/windCalmonthly.csv'
   import windCalmonthlyHours_raw from '@/data/zambia_wind_solar/output/windCalmonthlyHours.csv'
-
-
   const windCalmonthlyHours = groups(windCalmonthlyHours_raw, d => d.month).map(v=>v[1])
-
 
   const selectedRatio=ref(39)
   const ratio = computed(() => {
@@ -74,7 +71,7 @@
       mode: 'lines',   line: {shape:'spline', width:2.5,color: colors.wind[1]},
       type: 'scatter', showlegend:true, hoverinfo:'x+y', textposition:'top-center'
     }, {
-      y: solarDiurnal.map(v=>v.capFactor),
+      y: solarDiurnal.map(v=>v.meanCapFactor),
       x: [...Array(24).keys()].map(v=>v+1),
       name: 'Solar',
       mode: 'lines',   line: {shape:'spline', width:2.5,color: colors.solar[1]},

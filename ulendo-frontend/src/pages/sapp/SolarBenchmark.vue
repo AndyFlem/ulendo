@@ -31,7 +31,7 @@
   })
   import monthlySolarBenchmark from '@/data/sapp_benchmarks/output/monthlySolarBenchmarkPrice.csv'
   const latestMonthlySolarBenchmark = monthlySolarBenchmark[monthlySolarBenchmark.length-1]
-  import dailySolarBenchmark from '@/data/sapp_benchmarks/output/dailySolarBenchmarkPrice.csv'
+  // import dailySolarBenchmark from '@/data/sapp_benchmarks/output/dailySolarBenchmarkPrice.csv'
 
   import damHourlyJan2024 from '@/data/sapp/output/dam/months/dam_2024_1_hourly.csv'
   import damHourlyJuly2023 from '@/data/sapp/output/dam/months/dam_2023_7_hourly.csv'
@@ -219,6 +219,7 @@
     return {data, layout , config: {displayModeBar: false}}
   })
 
+  /*
   const chartSolarBenchmarkDaily = computed(() => {
     var data = [
       {
@@ -248,6 +249,7 @@
     }
     return {data, layout , config: {displayModeBar: false}}
   })
+  */
 </script>
 
 <template>
@@ -262,14 +264,6 @@
       </v-col>
       <v-col cols="12">
         The SAPP Solar Benchmark price for <b>{{ DateTime.fromJSDate(latestMonthlySolarBenchmark.date).toFormat('LLLL yyyy') }}</b> is <b>${{ format(',.0f')( latestMonthlySolarBenchmark.priceMean ) }}/MWh.</b>
-      </v-col>
-      <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
-        <v-sheet class="border ma-0 pa-0">
-          <PlotlyChart :definition="chartSolarBenchmarkDaily" />
-          <figcaption>
-            Daily SAPP Solar Benchmark Price
-          </figcaption>
-        </v-sheet>
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet class="border ma-0 pa-0">

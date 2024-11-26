@@ -15,12 +15,12 @@
   const makeTrans = inject('makeTrans')
   const months = inject('months')
 
-  import solarAnnualExceedance from '@/data/zambia_wind_solar/output/solarAnnualExceedance.csv'
-  import solarStatistics_raw from '@/data/zambia_wind_solar/output/solarStatistics.csv'
+  import solarAnnualExceedance from '@/data/ilute/output/iluteAnnualExceedance.csv'
+  import solarStatistics_raw from '@/data/ilute/output/iluteStatistics.csv'
   const solarStatistics = solarStatistics_raw[0]
-  import solarYearly from '@/data/zambia_wind_solar/output/solarYearly.csv'
-  import solarCalmonthly from '@/data/zambia_wind_solar/output/solarCalmonthly.csv'
-  import solarCalmonthlyHours_raw from '@/data/zambia_wind_solar/output/solarCalmonthlyHours.csv'
+  import solarYearly from '@/data/ilute/output/iluteYearly.csv'
+  import solarCalmonthly from '@/data/ilute/output/iluteCalmonthly.csv'
+  import solarCalmonthlyHours_raw from '@/data/ilute/output/iluteCalmonthlyHours.csv'
   const solarCalmonthlyHours = groups(solarCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
   import windAnnualExceedance from '@/data/zambia_wind_solar/output/windAnnualExceedance.csv'
@@ -94,7 +94,7 @@
     var data = [
       {
         x: solarAnnualExceedance.map(v => v.exceedance),
-        y: solarAnnualExceedance.map(v => v.normalisedYearlySpecificYield),
+        y: solarAnnualExceedance.map(v => v.normalisedSpecificYield),
         type: 'scatter', showlegend:true, hoverinfo:'x+y',name:'Solar',
         mode:'lines', line: {shape: '',width:3.5, color: colors.solar[1]}
       }, {
@@ -139,7 +139,7 @@
     var data = [
       {
         x: solarAnnualExceedance.map(v => v.exceedance),
-        y: solarAnnualExceedance.map(v => v.yearlySpecificYield/1000),
+        y: solarAnnualExceedance.map(v => v.specificYield/1000),
         type: 'scatter', showlegend:true, hoverinfo:'x+y',name: 'Solar',
         mode:'lines', line: {shape: '',width:3.5, color: colors.solar[1]}
       },{
@@ -187,7 +187,7 @@
     var data = [
       {
 
-        y: solarYearly.filter((v,i)=>i<20).map(v=>v.normalisedYearlySpecificYield),
+        y: solarYearly.filter((v,i)=>i<20).map(v=>v.normalisedSpecificYield),
         type: 'bar', showlegend:true, name: 'Solar',
         mode:'lines', marker: {color: makeTrans(colors.solar[1],0.7)}
       },{
@@ -229,7 +229,7 @@
       mode:'lines', line: {shape: 'spline',width:0, color: colors.solar[1]}
     },{
       x: solarCalmonthly.map(v=>v.month),
-      y: solarCalmonthly.map(v=>v.medianMonthlySpecificYield),
+      y: solarCalmonthly.map(v=>v.medianSpecificYield),
       type: 'scatter', showlegend:true, name: 'Solar',
       mode:'lines', line: {shape: 'spline',width:1.5, color: colors.solar[1], dash:''}
     },    {

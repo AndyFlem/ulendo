@@ -31,15 +31,14 @@
   })
   import monthlyWindBenchmark from '@/data/sapp_benchmarks/output/monthlyWindBenchmarkPrice.csv'
   const latestMonthlyWindBenchmark = monthlyWindBenchmark[monthlyWindBenchmark.length-1]
-  import dailyWindBenchmark from '@/data/sapp_benchmarks/output/dailyWindBenchmarkPrice.csv'
 
-  import damHourlyJan2024 from '@/data/sapp/output/dam/months/dam_2024_1_hourly.csv'
+  import damHourlyApr2019 from '@/data/sapp/output/dam/months/dam_2019_4_hourly.csv'
   import damHourlyJuly2023 from '@/data/sapp/output/dam/months/dam_2023_7_hourly.csv'
-  const damDailyJan2024=damDaily.filter(d=>d.dt.month==1 && d.dt.year==2024)
+  const damDailyApr2019=damDaily.filter(d=>d.dt.month==4 && d.dt.year==2019)
   const damDailyJuly2023=damDaily.filter(d=>d.dt.month==7 && d.dt.year==2023)
 
-  import damCalmonthlyHours_2024_raw from '@/data/sapp/output/dam/dam_calmonthlyhours_2024.csv'
-  const damCalmonthlyHours_2024 = groups(damCalmonthlyHours_2024_raw, d => d.month).map(v=>v[1])
+  import damCalmonthlyHours_2019_raw from '@/data/sapp/output/dam/dam_calmonthlyhours_2019.csv'
+  const damCalmonthlyHours_2019 = groups(damCalmonthlyHours_2019_raw, d => d.month).map(v=>v[1])
   import damCalmonthlyHours_2023_raw from '@/data/sapp/output/dam/dam_calmonthlyhours_2023.csv'
   const damCalmonthlyHours_2023 = groups(damCalmonthlyHours_2023_raw, d => d.month).map(v=>v[1])
 
@@ -184,9 +183,9 @@
       type: 'scatter', showlegend:true, hoverinfo:'x+y', textposition:'top-center'
     },
     {
-      y: damCalmonthlyHours_2024[1].map(v=>v.priceMean),
-      x: damCalmonthlyHours_2024[1].map(v=>v.hour),
-      name: 'DAM January 2024', yaxis: 'y2',
+      y: damCalmonthlyHours_2019[4].map(v=>v.priceMean),
+      x: damCalmonthlyHours_2019[4].map(v=>v.hour),
+      name: 'DAM April 2019', yaxis: 'y2',
       mode: 'lines',   line: {shape:'spline', width:2.5,color: colors.combined[1]},
       type: 'scatter', showlegend:true, hoverinfo:'x+y', textposition:'top-center'
     },
@@ -219,57 +218,20 @@
     return {data, layout , config: {displayModeBar: false}}
   })
 
-  const chartWindBenchmarkDaily = computed(() => {
-    var data = [
-      {
-        y: dailyWindBenchmark.map(d=>d.price),
-        x: dailyWindBenchmark.map(d=>d.date),
-        mode: 'lines', line: {shape: '', color: colors.wind[1], width: 0.5},
-        type: 'scatter', showlegend:true, fill:'tozeroy',  name:'Wind Benchmark Price',
-        hovertemplate: "<b>%{x}</b><br>" +
-          "%{y:,.0f} %{yaxis.title.text}" +
-          "<extra></extra>",
-      }
-    ]
-    var layout = {
-      height: 220,
-      font: font,
-      showlegend: true, legend: {orientation: 'h',xanchor: 'left', x:0, y: 1},
-      margin: {l: 70,r: 5,b: 25,t: 0},
-      xaxis: {
-        showgrid: true, zeroline: false, ticks: 'outside',
-        range:[min(dailyWindBenchmark, d=>d.date),max(dailyWindBenchmark, d=>d.date)]
-      },
-      yaxis: {
-        range: [20,280],
-        title: `$/MWh`,
-        showgrid: true, zeroline: false, tickformat: '.0f', ticks:'outside'
-      }
-    }
-    return {data, layout , config: {displayModeBar: false}}
-  })
 </script>
 
 <template>
   <PresentationPage>
     <v-row :class="!smAndUp?'ma-0 pa-0':'pa-5'">
       <v-col cols="12">
-        The <b>SAPP Wind Benchmark</b> is a reference price (in $/MWh) that would be achieved by a nominal grid-connected wind PV plant
+        The <b>SAPP Wind Benchmark</b> is a reference price (in $/MWh) that would be achieved by a grid-connected wind plant in eastern Zambia
         that sells all of its energy on the <a href="/sapp/dam">Southern African Power Pool (SAPP) Day-ahead Market (DAM)</a>.
         <br><br>
-        The SAPP Wind Benchmark is calculated by combining the hourly settlement price of the SAPP DAM market with the hourly
-        relative output of a wind PV plant located in Western Zambia.
+        The SAPP Wind Benchmark is calculated by combining the hourly settlement price of the SAPP DAM market with the average hourly
+        output of a wind PV plant located in Western Zambia.
       </v-col>
       <v-col cols="12">
         The SAPP Wind Benchmark price for <b>{{ DateTime.fromJSDate(latestMonthlyWindBenchmark.date).toFormat('LLLL yyyy') }}</b> is <b>${{ format(',.0f')( latestMonthlyWindBenchmark.priceMean ) }}/MWh.</b>
-      </v-col>
-      <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
-        <v-sheet class="border ma-0 pa-0">
-          <PlotlyChart :definition="chartWindBenchmarkDaily" />
-          <figcaption>
-            Daily SAPP Wind Benchmark Price
-          </figcaption>
-        </v-sheet>
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet class="border ma-0 pa-0">
@@ -288,15 +250,15 @@
         </v-sheet>
       </v-col>
       <v-col cols="12">
-        Prior to 2020 the SAPP Wind Benchmark was consistently higher than the SAPP DAM Average Price by between 10 - 20%.
-        Since then, the SAPP Wind Benchmark has trended lower compared to the SAPP DAM Average Price until through 2023 it was consistently
-        15 - 25% below the market.
+        Prior to 2020 the SAPP Wind Benchmark was consistently lower than the SAPP DAM Average Price by around 5%.
+        Since then, the SAPP Wind Benchmark has trended higher compared to the SAPP DAM Average Price until through 2023 it was
+        5 - 10% above the market.
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="6">
         <v-sheet class="border ma-0 pa-0">
-          <PlotlyChart :definition="chartHourlyPrice(damHourlyJan2024, damDailyJan2024)" />
+          <PlotlyChart :definition="chartHourlyPrice(damHourlyApr2019, damDailyApr2019)" />
           <figcaption>
-            Hourly price of the SAPP DAM market in January 2024 (grey), and daily average prices by time-of-day category - coloured lines.
+            Hourly price of the SAPP DAM market in April 2019 (grey), and daily average prices by time-of-day category - coloured lines.
           </figcaption>
         </v-sheet>
       </v-col>
@@ -312,12 +274,13 @@
         The relative value of SAPP Wind Benchmark and the DAM Market price in these periods has primarily been driven by the relative price of standard,
         daytime energy on the SAPP DAM market compared to the price of morning and evening peak price energy.
         <br><br>
-        In January 2024,
-        for example, the SAPP Wind Benchmark rose to over 40% above the SAPP DAM Average Price due to a spike in the price
-        of standard, daytime energy on the SAPP DAM market along with relatively low evening, peak prices.
+        In July 2023,for example, the SAPP Wind Benchmark rose to over 10% above the SAPP DAM Average Price
+        due to relatively high evening peak prices and low standard, daytime prices.
 
-        In July 2023, by contrast, a well developed morning peak price and a relatively low standard, daytime price led to the SAPP Wind Benchmark being
-        26% below the average SAPP DAM price.
+
+        In July 2023, by contrast, lower evening, peak prices and higher daytime, standard prices,
+        when wind output is relatively lower on average, resulted in the
+        SAPP Wind Benchmark being 5% below the SAPP DAM Average Price.
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="6">
         <v-sheet class="border ma-0 pa-0">

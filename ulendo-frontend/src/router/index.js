@@ -30,14 +30,22 @@ const pageGroups = [
         title: 'SAPP Wind Benchmark Price'
       }
     ]
-  },
-  {
+  }, {
     name: 'Lumwana',
     title: 'Lumwana',
     pages:[
       {
         name: 'LumwanaSupplyDemand',
         title: 'Lumwana Mine Energy Supply and Demand Balance'
+      }
+    ]
+  }, {
+    name: 'Ilute',
+    title: 'Ilute Solar PV Project',
+    pages:[
+      {
+        name: 'IluteYield',
+        title: 'Ilute PV Project - Yield Statistics'
       }
     ]
   }
@@ -94,12 +102,17 @@ const routes = [
     path: '/sapp/solar-benchmark',
     name: 'SolarBenchmark',
     meta: {groups:['public']},
-    component: () => import(/* webpackChunkName: "sapp-dam" */ '@/pages/sapp/SolarBenchmark.vue'),
+    component: () => import(/* webpackChunkName: "sapp-solar-benchmark" */ '@/pages/sapp/SolarBenchmark.vue'),
   }, {
     path: '/sapp/wind-benchmark',
     name: 'WindBenchmark',
     meta: {groups:['public']},
-    component: () => import(/* webpackChunkName: "sapp-dam" */ '@/pages/sapp/WindBenchmark.vue'),
+    component: () => import(/* webpackChunkName: "sapp-wind-benchmark" */ '@/pages/sapp/WindBenchmark.vue'),
+  }, {
+    path: '/ilute/yield',
+    name: 'IluteYield',
+    meta: {groups:['public']},
+    component: () => import(/* webpackChunkName: "ilute-yield" */ '@/pages/ilute/IluteYield.vue'),
   }
 ]
 

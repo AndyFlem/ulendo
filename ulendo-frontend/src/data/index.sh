@@ -1,6 +1,6 @@
 
 
-#nodemon --watch ./src/data/zambia_wind_solar/input --watch ./src/data/zambia_wind_solar/processor.js -e js,csv --verbose ./src/data/zambia_wind_solar/processor.js &
+nodemon --watch ./src/data/zambia_wind_solar/input --watch ./src/data/zambia_wind_solar/processor.js -e js,csv --verbose ./src/data/zambia_wind_solar/processor.js &
 
 #nodemon --watch ./src/data/kariba/input --watch ./src/data/kariba/processor.js -e js,csv --verbose ./src/data/kariba/processor.js &
 
@@ -10,4 +10,6 @@
 
 #nodemon --watch ./src/data/sapp/input --watch ./src/data/sapp/processor.js -e js,csv --verbose ./src/data/sapp/processor.js &
 
-nodemon --watch ./src/data/sapp_benchmarks/input --watch ./src/data/sapp_benchmarks/processor.js -e js,csv --verbose ./src/data/sapp_benchmarks/processor.js &
+#nodemon --watch ./src/data/sapp_benchmarks/input --watch ./src/data/sapp_benchmarks/processor.js -e js,csv --verbose ./src/data/sapp_benchmarks/processor.js &
+
+nodemon --watch ./src/data/ilute/input --watch ./src/data/ilute/processor.js -e js,csv --verbose ./src/data/ilute/processor.js &

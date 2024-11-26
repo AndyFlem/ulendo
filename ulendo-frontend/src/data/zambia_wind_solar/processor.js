@@ -19,6 +19,7 @@ fs.readdirSync(folder + '/output').forEach(file => {
 const capacitySolarMW = 25
 const capacityWindMW = 180
 
+
 const solarHourly = d3.csvParse(fs.readFileSync(folder + '/input/ilute_25mw_yield.csv', 'utf-8'), d3.autoType).map(v=> {
   v.date=DateTime.fromObject({year:v.year,month:v.month,day:v.day, hour: v.hour})
   v.energyMWh=parseFloat(v.kw)/25*capacitySolarMW/1000
@@ -163,21 +164,6 @@ const windStatistics = [{
 }]
 fs.writeFileSync(folder + '/output/windStatistics.csv', d3.csvFormat(windStatistics))
 
-//****************************************************************
-// Solar data processing
-//****************************************************************
-
-const solarDiurnal = d3.rollups(solarHourly,v=>{
-  let ret = {
-    hour: v[0].hour,
-    capFactor: (d3.mean(v,h=>h.capFactor))
-  }
-  ret.dailySpecificYield = ret.dailyCapFactor * 24
-
-  return ret
-}, v=>v.hour).map(v=>v[1])
-fs.writeFileSync(folder + '/output/solarDiurnal.csv', d3.csvFormat(solarDiurnal))
-
 const solarDaily = d3.rollups(solarHourly,v=>{
   let ret = {
     date: v[0].date,
@@ -190,6 +176,22 @@ const solarDaily = d3.rollups(solarHourly,v=>{
 
   return ret
 }, v=>v.date.startOf('day')).map(v=>v[1])
+
+/*
+//****************************************************************
+// Solar data processing
+//****************************************************************
+const solarDiurnal = d3.rollups(solarHourly,v=>{
+  let ret = {
+    hour: v[0].hour,
+    capFactor: (d3.mean(v,h=>h.capFactor))
+  }
+  ret.dailySpecificYield = ret.dailyCapFactor * 24
+
+  return ret
+}, v=>v.hour).map(v=>v[1])
+fs.writeFileSync(folder + '/output/solarDiurnal.csv', d3.csvFormat(solarDiurnal))
+
 
 const solarMonthly = d3.rollups(solarDaily, d => {
   return {
@@ -291,6 +293,8 @@ const solarStatistics = [{
   medianAnualSpecificYield: solarMedianAnualSpecificYield
 }]
 fs.writeFileSync(folder + '/output/solarStatistics.csv', d3.csvFormat(solarStatistics))
+
+*/
 
 const period1 = {from: DateTime.fromObject({year:2019,month:2,day:9}), to: DateTime.fromObject({year:2019,month:2,day:20})}
 const period2 = {from: DateTime.fromObject({year:2019,month:6,day:9}), to: DateTime.fromObject({year:2019,month:6,day:20})}
