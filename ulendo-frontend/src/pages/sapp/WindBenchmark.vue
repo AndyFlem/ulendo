@@ -19,7 +19,7 @@
 
   //import damMonthly from '@/data/sapp/output/dam/dam_monthly.csv'
   import damDaily_raw from '@/data/sapp/output/dam/dam_daily.csv'
-  import windDiurnal from '@/data/zambia_wind_solar/output/windDiurnal.csv'
+  import windDiurnal from '@/data/unika/output/unikaDiurnal.csv'
 
   const damDaily=damDaily_raw.map(d=>{
     d.dt=DateTime.fromJSDate(d.datetime)
@@ -176,7 +176,7 @@
 
   const chartWindDiurnalDAM = computed(() => {
     var data = [ {
-      y: windDiurnal.map(v=>v.capFactor),
+      y: windDiurnal.map(v=>v.meanCapFactor),
       x: [...Array(24).keys()].map(v=>v),
       name: 'Wind Output',
       mode: 'lines',   line: {shape:'spline', width:4,color: colors.wind[1]}, fill:'tozeroy',

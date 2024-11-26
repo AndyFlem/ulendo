@@ -18,9 +18,9 @@
   import solarCalmonthlyHours_raw from '@/data/ilute/output/iluteCalmonthlyHours.csv'
   const solarCalmonthlyHours = groups(solarCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
-  import windDiurnal from '@/data/zambia_wind_solar/output/windDiurnal.csv'
-  import windCalmonthly from '@/data/zambia_wind_solar/output/windCalmonthly.csv'
-  import windCalmonthlyHours_raw from '@/data/zambia_wind_solar/output/windCalmonthlyHours.csv'
+  import windDiurnal from '@/data/unika/output/unikaDiurnal.csv'
+  import windCalmonthly from '@/data/unika/output/unikaCalmonthly.csv'
+  import windCalmonthlyHours_raw from '@/data/unika/output/unikaCalmonthlyHours.csv'
   const windCalmonthlyHours = groups(windCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
   const selectedRatio=ref(39)
@@ -65,7 +65,7 @@
 
   const chartWindSolarDiurnal = computed(() => {
     var data = [ {
-      y: windDiurnal.map(v=>v.capFactor),
+      y: windDiurnal.map(v=>v.meanCapFactor),
       x: [...Array(24).keys()].map(v=>v+1),
       name: 'Wind',
       mode: 'lines',   line: {shape:'spline', width:2.5,color: colors.wind[1]},
@@ -121,7 +121,7 @@
       },
       yaxis: {
         title: 'Average daily <br>output',
-        showgrid: true, zeroline: false, tickformat: ',.0%', ticks:'outside', range:[0,1],dtick:0.2
+        showgrid: true, zeroline: false, tickformat: ',.0%', ticks:'outside',dtick:0.2
       }
     }
 

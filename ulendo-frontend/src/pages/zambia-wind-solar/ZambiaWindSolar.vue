@@ -23,12 +23,12 @@
   import solarCalmonthlyHours_raw from '@/data/ilute/output/iluteCalmonthlyHours.csv'
   const solarCalmonthlyHours = groups(solarCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
-  import windAnnualExceedance from '@/data/zambia_wind_solar/output/windAnnualExceedance.csv'
-  import windStatistics_raw from '@/data/zambia_wind_solar/output/windStatistics.csv'
+  import windAnnualExceedance from '@/data/unika/output/unikaAnnualExceedance.csv'
+  import windStatistics_raw from '@/data/unika/output/unikaStatistics.csv'
   const windStatistics=windStatistics_raw[0]
-  import windYearly from '@/data/zambia_wind_solar/output/windYearly.csv'
-  import windCalmonthly from '@/data/zambia_wind_solar/output/windCalmonthly.csv'
-  import windCalmonthlyHours_raw from '@/data/zambia_wind_solar/output/windCalmonthlyHours.csv'
+  import windYearly from '@/data/unika/output/unikaYearly.csv'
+  import windCalmonthly from '@/data/unika/output/unikaCalmonthly.csv'
+  import windCalmonthlyHours_raw from '@/data/unika/output/unikaCalmonthlyHours.csv'
   const windCalmonthlyHours = groups(windCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
   import dailyCapFactorFeb2019 from '@/data/zambia_wind_solar/output/dailyCapFactorFeb2019.csv'
@@ -99,7 +99,7 @@
         mode:'lines', line: {shape: '',width:3.5, color: colors.solar[1]}
       }, {
         x: windAnnualExceedance.map(v => v.exceedance),
-        y: windAnnualExceedance.map(v => v.normalisedYearlySpecificYield),
+        y: windAnnualExceedance.map(v => v.normalisedSpecificYield),
         type: 'scatter', showlegend:true, hoverinfo:'x+y',name:'Wind',
         mode:'lines', line: {shape: '',width:3.5, color: colors.wind[1]}
       },{
@@ -121,14 +121,7 @@
       yaxis: {
         title: '% difference from median',  dtick:0.02,
         showgrid: true, zeroline: false, tickformat: ',.0%', ticks:'outside',
-        range:[min(windAnnualExceedance,v=>v.normalisedYearlySpecificYield),max(windAnnualExceedance,v=>v.normalisedYearlySpecificYield)],
-      },
-      yaxis2: {
-        showgrid: false,zeroline: false,
-        showline: false,title: 'Specific Yield GWh/MW/year',
-        tickformat: ',.2f',
-        range:[min(windAnnualExceedance,v=>v.yearlySpecificYield/1000),max(windAnnualExceedance,v=>v.yearlySpecificYield/1000)],
-        overlaying: 'y',side: 'right'
+        range:[min(windAnnualExceedance,v=>v.normalisedSpecificYield),max(windAnnualExceedance,v=>v.normalisedSpecificYield)],
       }
     }
 
@@ -150,7 +143,7 @@
         mode:'markers+text', marker:{size:10, color:'#666'}
       },{
         x: windAnnualExceedance.map(v => v.exceedance),
-        y: windAnnualExceedance.map(v => v.yearlySpecificYield/1000),
+        y: windAnnualExceedance.map(v => v.specificYield/1000),
         type: 'scatter', showlegend:true, hoverinfo:'x+y', name: 'Wind',
         mode:'lines', line: {shape: '',width:3.5, color: colors.wind[1]}
       },{
@@ -192,7 +185,7 @@
         mode:'lines', marker: {color: makeTrans(colors.solar[1],0.7)}
       },{
 
-        y: windYearly.filter((v,i)=>i<20).map(v=>v.normalisedYearlySpecificYield),
+        y: windYearly.filter((v,i)=>i<20).map(v=>v.normalisedSpecificYield),
         type: 'bar', showlegend:true, name: 'Wind',
         mode:'lines', marker: {color: makeTrans(colors.wind[1],0.7)}
       }]
@@ -229,7 +222,7 @@
       mode:'lines', line: {shape: 'spline',width:0, color: colors.solar[1]}
     },{
       x: solarCalmonthly.map(v=>v.month),
-      y: solarCalmonthly.map(v=>v.medianSpecificYield),
+      y: solarCalmonthly.map(v=>v.medianMonthlySpecificYield),
       type: 'scatter', showlegend:true, name: 'Solar',
       mode:'lines', line: {shape: 'spline',width:1.5, color: colors.solar[1], dash:''}
     },    {
