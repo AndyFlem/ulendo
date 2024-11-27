@@ -41,11 +41,20 @@ const pageGroups = [
     ]
   }, {
     name: 'Ilute',
-    title: 'Ilute Solar PV Project',
+    title: 'Ilute Solar PV',
     pages:[
       {
         name: 'IluteYield',
         title: 'Ilute PV Project - Yield Statistics'
+      }
+    ]
+  }, {
+    name: 'Unika',
+    title: 'Unika II Wind',
+    pages:[
+      {
+        name: 'UnikaYield',
+        title: 'Unika II Wind Project - Yield Statistics'
       }
     ]
   }
@@ -113,6 +122,11 @@ const routes = [
     name: 'IluteYield',
     meta: {groups:['public']},
     component: () => import(/* webpackChunkName: "ilute-yield" */ '@/pages/ilute/IluteYield.vue'),
+  }, {
+    path: '/unika/yield',
+    name: 'UnikaYield',
+    meta: {groups:['public']},
+    component: () => import(/* webpackChunkName: "unika-yield" */ '@/pages/unika/UnikaYield.vue'),
   }
 ]
 

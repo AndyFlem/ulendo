@@ -110,11 +110,14 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
           month: m,
           hour: v[0].hour,
           meanHourlyCapFactor: d3.mean(v,l=>l.capFactor),
+          medianHourlyCapFactor: d3.median(v,l=>l.capFactor),
           p90HourlyCapFactor: d3.quantile(v, 0.9, l=>l.capFactor),
           p10HourlyCapFactor: d3.quantile(v, 0.1, l=>l.capFactor),
           meanHourlyEnergyMWh: d3.mean(v,l=>l.energyMWh),
+          medianHourlyEnergyMWh: d3.median(v,l=>l.energyMWh),
           p90HourlyEnergyMWh: d3.quantile(v, 0.9, l=>l.energyMWh),
           p10HourlyEnergyMWh: d3.quantile(v, 0.1, l=>l.energyMWh),
+
         }
       },v=>v.hour).map(v=>v[1])
     })
@@ -141,7 +144,7 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
       return {
         duration_years: d,
         stDev: stDev/Math.sqrt(d),
-        p50: mean,
+        p50: d3.median(yearly,v=>v.energyMWh),
         p75: normalinv(0.25, mean, stDev/Math.sqrt(d)),
         p90: normalinv(0.10, mean, stDev/Math.sqrt(d)),
         p99: normalinv(0.01, mean, stDev/Math.sqrt(d))

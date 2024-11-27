@@ -18,7 +18,7 @@ fs.readdirSync(folder + '/output').forEach(file => {
 })
 
 const params = {
-  capacityWindMW: 180,
+  capacityWindMW: 160,
 }
 
 fs.writeFileSync(folder + '/output/parameters.json', JSON.stringify(params, null, 2))
