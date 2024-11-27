@@ -19,7 +19,7 @@
 
 import { min, max, mean, sum } from 'd3-array'
 
-function GreenCoPPA(periods, marketPrices, plantPerformance, modelRun, greencoParams) {
+function greenCoPPA(periods, marketPrices, plantPerformance, greencoParams) {
   // let periods = fPeriods(params.forecast.years)
   // ToDo: Take periods from marketPrices
 
@@ -32,7 +32,7 @@ function GreenCoPPA(periods, marketPrices, plantPerformance, modelRun, greencoPa
     // =========================================================================================================
     // Copy in some values
     // From the plant model
-    p.modelRun=modelRun
+
     p.yieldDegradedNet = plantPerformance[i].yieldDegradedNet
     p.yieldUndegradedGross = plantPerformance[i].yieldUndegradedGross
     p.yieldUndegradedNet = plantPerformance[i].yieldUndegradedNet
@@ -105,7 +105,6 @@ function GreenCoPPA(periods, marketPrices, plantPerformance, modelRun, greencoPa
 
   // Return the model run and some summary statistics
   return {
-    modelRun: modelRun,
     bufferDrawdownMonths: periods.filter(v => v.bufferDrawdown > 0).length / periods.length,
     bufferZeroMonths: periods.filter(v => v.bufferBalance==0).length / periods.length,
     firstPeriodBufferZero: min(periods.filter(v => v.bufferBalance==0), v => v.period),
@@ -120,4 +119,4 @@ function GreenCoPPA(periods, marketPrices, plantPerformance, modelRun, greencoPa
   }
 }
 
-export { GreenCoPPA }
+export { greenCoPPA }
