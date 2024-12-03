@@ -306,7 +306,7 @@
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" md="6"></v-col>
       <v-col cols="12">
-        <h2>Diurnal Yield</h2>
+        <h2>Diurnal Yield Variability</h2>
       </v-col>
       <v-col cols="12">
         <v-row :class="smAndUp?'border ml-2 pl-2':'border ma-0 pa-0'">

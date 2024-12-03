@@ -19,7 +19,7 @@
 
 import { min, max, mean, sum } from 'd3-array'
 
-function greenCoPPA(periods, marketPrices, plantPerformance, greencoParams) {
+function greenCoPPA(run, plantPerformance, greencoParams) {
   // let periods = fPeriods(params.forecast.years)
   // ToDo: Take periods from marketPrices
 
@@ -27,11 +27,22 @@ function greenCoPPA(periods, marketPrices, plantPerformance, greencoParams) {
   let bufferBalance = greencoParams.bufferSize
 
   // For each period, calculate the cashflows and buffer movements
-  periods.map((p, i) => {
+  const ppaModel = run.periods.map(v => {
+    return {
+      period: v.period,
+      year: v.year,
+      month: v.month,
+      discountFactor: v.discountFactor
+    }
+  })
+
+  ppaModel.map(p => {
 
     // =========================================================================================================
     // Copy in some values
     // From the plant model
+
+    const i = p.period - 1
 
     p.yieldDegradedNet = plantPerformance[i].yieldDegradedNet
     p.yieldUndegradedGross = plantPerformance[i].yieldUndegradedGross
@@ -39,10 +50,10 @@ function greenCoPPA(periods, marketPrices, plantPerformance, greencoParams) {
 
     // From the market model
     // ToDo: Do these need to be here?
-    p.mu = marketPrices[i].mu
-    p.sd = marketPrices[i].annualStDev
+    //p.mu = run.marketForecast[i].mu
+    //p.sd = run.marketForecast[i].annualStDev
 
-    p.benchmarkPrice = marketPrices[i].price
+    p.benchmarkPrice = run.marketForecast[i].price
 
     // =========================================================================================================
     // GreenCo model
@@ -101,21 +112,22 @@ function greenCoPPA(periods, marketPrices, plantPerformance, greencoParams) {
     p.greencoSpecificMargin = p.greencoMargin / p.yieldDegradedNet
     p.bufferBalance = bufferBalance
     p.bufferBalance_pct = p.bufferBalance / greencoParams.bufferSize
+    return p
   })
 
   // Return the model run and some summary statistics
   return {
-    bufferDrawdownMonths: periods.filter(v => v.bufferDrawdown > 0).length / periods.length,
-    bufferZeroMonths: periods.filter(v => v.bufferBalance==0).length / periods.length,
-    firstPeriodBufferZero: min(periods.filter(v => v.bufferBalance==0), v => v.period),
-    projectcoDefecitMonths: periods.filter(v => v.projectcoPayment < v.projectcoInvoiced).length/periods.length,
-    projectcoTariffAchieved: mean(periods, v => v.projectcoTariffAchieved),
+    bufferDrawdownMonths: ppaModel.filter(v => v.bufferDrawdown > 0).length / ppaModel.length,
+    bufferZeroMonths: ppaModel.filter(v => v.bufferBalance==0).length / ppaModel.length,
+    firstPeriodBufferZero: min(ppaModel.filter(v => v.bufferBalance==0), v => v.period),
+    projectcoDefecitMonths: ppaModel.filter(v => v.projectcoPayment < v.projectcoInvoiced).length/ppaModel.length,
+    projectcoTariffAchieved: mean(ppaModel, v => v.projectcoTariffAchieved),
     // projectcoPayment: d3.mean(periods, v => v.projectcoPayment),
     // greencoMargin: d3.mean(periods, v => v.greencoMargin),
     // bufferBalance: d3.mean(periods, v => v.bufferBalance),
-    projectcoNPV: sum(periods,v=>v.projectcoPayment*v.discount_factor),
-    greencoNPV: sum(periods,v=>v.greencoMargin*v.discount_factor),
-    periods: periods
+    projectcoNPV: sum(ppaModel,v=>v.projectcoPayment*v.discountFactor),
+    greencoNPV: sum(ppaModel,v=>v.greencoMargin*v.discountFactor),
+    periods: ppaModel
   }
 }
 

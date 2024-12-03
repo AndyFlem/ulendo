@@ -32,7 +32,7 @@ const pageGroups = [
     ]
   }, {
     name: 'Lumwana',
-    title: 'Lumwana',
+    title: 'Lumwana Supply and Demand',
     pages:[
       {
         name: 'LumwanaSupplyDemand',
@@ -46,6 +46,10 @@ const pageGroups = [
       {
         name: 'IluteYield',
         title: 'Ilute PV Project - Yield Statistics'
+      },
+      {
+        name: 'IluteGreenCo',
+        title: 'Ilute PV Project - GreenCo PPA'
       }
     ]
   }, {
@@ -122,6 +126,11 @@ const routes = [
     name: 'IluteYield',
     meta: {groups:['public']},
     component: () => import(/* webpackChunkName: "ilute-yield" */ '@/pages/ilute/IluteYield.vue'),
+  }, {
+    path: '/ilute/greenco',
+    name: 'IluteGreenCo',
+    meta: {groups:['public']},
+    component: () => import(/* webpackChunkName: "ilute-greenco" */ '@/pages/ilute/IluteGreenCo.vue'),
   }, {
     path: '/unika/yield',
     name: 'UnikaYield',

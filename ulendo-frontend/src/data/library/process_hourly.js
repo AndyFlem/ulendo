@@ -59,7 +59,9 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
       energyMWh: d3.sum(d,v=>v.energyMWh)
     }
   }, d => d.year).map(v=>v[1])
+
   const medianAnualSpecificYield=d3.median(yearly_tmp, v => v.specificYield)
+
   const yearly = yearly_tmp.map(v=>{
     v.normalisedSpecificYield = v.specificYield / medianAnualSpecificYield
     return v
@@ -154,7 +156,7 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
   })()
 
 
-  const iluteStatistics = [{
+  const statistics = [{
     years: yearly.length,
     months: monthly.length,
     medianAnnualEnergyMWh: d3.median(yearly, v=>v.energyMWh),
@@ -166,8 +168,9 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
     p25AnnualEnergyMWh: d3.quantile(yearly, 0.25, v=>v.energyMWh),
     p10AnnualEnergyMWh: d3.quantile(yearly, 0.1, v=>v.energyMWh),
     p05AnnualEnergyMWh: d3.quantile(yearly, 0.05, v=>v.energyMWh),
-    medianAnualSpecificYield: medianAnualSpecificYield,
-
+    medianAnualSpecificYieldMWhperMW: medianAnualSpecificYield,
+    meanAnnualSpecificYieldMWhperMW: d3.mean(yearly, v => v.specificYield),
+    coefVarAnnualEnergy: d3.deviation(yearly, v=>v.energyMWh)/d3.mean(yearly, v=>v.energyMWh),
   }]
 
   fs.writeFileSync(folder + `/output/${filePrefix}Diurnal.csv`, d3.csvFormat(diurnal))
@@ -177,7 +180,7 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
   fs.writeFileSync(folder + `/output/${filePrefix}CalmonthlyHours.csv`, d3.csvFormat(calmonthlyHours.flat()))
   fs.writeFileSync(folder + `/output/${filePrefix}AnnualExceedance.csv`, d3.csvFormat(annualExceedance))
   fs.writeFileSync(folder + `/output/${filePrefix}DurationVariability.csv`, d3.csvFormat(durationVariability))
-  fs.writeFileSync(folder + `/output/${filePrefix}Statistics.csv`, d3.csvFormat(iluteStatistics))
+  fs.writeFileSync(folder + `/output/${filePrefix}Statistics.csv`, d3.csvFormat(statistics))
 
 }
 

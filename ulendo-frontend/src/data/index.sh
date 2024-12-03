@@ -1,6 +1,6 @@
 
 
-nodemon --watch ./src/data/zambia_wind_solar/input --watch ./src/data/zambia_wind_solar/processor.js -e js,csv --verbose ./src/data/zambia_wind_solar/processor.js &
+#nodemon --watch ./src/data/zambia_wind_solar/input --watch ./src/data/zambia_wind_solar/processor.js -e js,csv --verbose ./src/data/zambia_wind_solar/processor.js &
 
 #nodemon --watch ./src/data/kariba/input --watch ./src/data/kariba/processor.js -e js,csv --verbose ./src/data/kariba/processor.js &
 
@@ -15,3 +15,5 @@ nodemon --watch ./src/data/zambia_wind_solar/input --watch ./src/data/zambia_win
 nodemon --watch ./src/data/ilute/input --watch ./src/data/library --watch ./src/data/ilute/processor.js -e js,csv --verbose ./src/data/ilute/processor.js &
 
 nodemon --watch ./src/data/unika/input --watch ./src/data/library --watch ./src/data/unika/processor.js -e js,csv --verbose ./src/data/unika/processor.js &
+
+nodemon --watch ./src/data/kalumbila/input --watch ./src/data/library --watch ./src/data/kalumbila/processor.js -e js,csv --verbose ./src/data/kalumbila/processor.js &

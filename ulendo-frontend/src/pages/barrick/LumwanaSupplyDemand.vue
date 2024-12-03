@@ -63,7 +63,8 @@
     return {data, layout , config: {displayModeBar: false}}
   })
 
-  const chartAnnual = computed(() => {
+  /*
+  const chartCombinedAnnual = computed(() => {
     let cap='.'
 
     var data = [
@@ -115,6 +116,7 @@
     plt.newPlot(div, data, layout,{displayModeBar: false})
     return div
   })
+  */
 </script>
 
 <template>

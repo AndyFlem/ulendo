@@ -1,6 +1,7 @@
 export const modelParams = {
   years:25,
-  runs:100
+  runs:1000,
+  discountRate: 0.1,
 }
 
 export const plantParams = {
@@ -18,7 +19,6 @@ export const plantParams = {
 }
 
 export const greencoParams = {
-  discountRate: 0.1,
   indexation: 2,
   baseTariff: 45,
   adjustmentCapPlus: 40,
@@ -27,7 +27,7 @@ export const greencoParams = {
   adjustmentFactorDown: 80,
   fixedTransactionCost: 15,
   actualTransactionCost: 15,
-  buffer: 2.9
+  bufferSize: 2.9
 }
 
 export const damForecastParams = {

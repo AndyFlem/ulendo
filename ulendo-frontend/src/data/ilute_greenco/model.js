@@ -5,23 +5,19 @@ import { greenCoPPA } from './greenco_ppa.js'
 
 import { modelParams, greencoParams, plantParams, damForecastParams } from './params.js'
 
-const periods = generatePeriods(modelParams.years)
-
 const modelRuns = [...Array(modelParams.runs).keys()].map(v=> {
   return {
-    runNo: v+1
+    runNo: v+1,
+    periods: generatePeriods(modelParams.years)
   }
 })
 
-const plantYields = plantPerformance(periods, plantParams)
-
+const plantYields = plantPerformance(generatePeriods(modelParams.years), plantParams)
 
 modelRuns.forEach(run => {
-  run.marketForecast = SAPPDAMForecast(periods, run, damForecastParams)
-  run.greenCoPPA = greenCoPPA(periods, run.marketForecast, plantYields, greencoParams)
+  run.marketForecast = SAPPDAMForecast(run, damForecastParams)
+  run.ppaModel = greenCoPPA(run, plantYields, greencoParams)
 })
-
-console.log(modelRuns[0].marketForecast[0])
 
 // Create an array of monthly periods for the given number of years
 function generatePeriods(years, skip=1) {
@@ -35,7 +31,7 @@ function generatePeriods(years, skip=1) {
     return {
       period,
       year,
-      //discount_factor: 1/(1 + discountRate)**(year-1),
+      discountFactor: 1/(1 + modelParams.discountRate)**(year-1),
       month: (period - year * 12) + 12
     }
   })
