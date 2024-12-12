@@ -17,3 +17,5 @@ nodemon --watch ./src/data/ilute/input --watch ./src/data/library --watch ./src/
 nodemon --watch ./src/data/unika/input --watch ./src/data/library --watch ./src/data/unika/processor.js -e js,csv --verbose ./src/data/unika/processor.js &
 
 nodemon --watch ./src/data/kalumbila/input --watch ./src/data/library --watch ./src/data/kalumbila/processor.js -e js,csv --verbose ./src/data/kalumbila/processor.js &
+
+nodemon --watch ./src/data/solar_mixing/input --watch ./src/data/library --watch ./src/data/solar_mixing/processor.js -e js,csv --verbose ./src/data/solar_mixing/processor.js &

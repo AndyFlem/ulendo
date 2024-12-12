@@ -18,11 +18,38 @@
   import iluteAnnualExceedance from '@/data/ilute/output/iluteAnnualExceedance.csv'
   import iluteDurationVariability from '@/data/ilute/output/iluteDurationVariability.csv'
   import iluteStatistics_raw from '@/data/ilute/output/iluteStatistics.csv'
-  import iluteCalmonthly from '@/data/ilute/output/iluteCalmonthly.csv'
   const iluteStatistics = iluteStatistics_raw[0]
+  import iluteCalmonthly from '@/data/ilute/output/iluteCalmonthly.csv'
   import iluteCalmonthlyHours_raw from '@/data/ilute/output/iluteCalmonthlyHours.csv'
   const iluteCalmonthlyHours = groups(iluteCalmonthlyHours_raw, d => d.month).map(v=>v[1])
+  import iluteMonthly from '@/data/ilute/output/iluteMonthly.csv'
 
+  function chartMonthlyEnergy() {
+    var data = [
+      {
+        x: iluteMonthly.map(v=>v.datetime),
+        y: iluteMonthly.map(v=>v.energyMWh/1000),
+        type: 'bar', showlegend:false,
+        marker: {color: makeTrans(colors.solar[1],0.7)}
+      }]
+
+    var layout = {
+      height: 320,
+      showlegend: true, legend: {xanchor: 'left', x:0, y: -0.2, orientation:'h'},
+      margin: {l: 70,r: 5,b: 30,t: 10}, font:font,
+      xaxis: {
+        showgrid: false,
+        zeroline: false,
+        ticks:'outside',
+      },
+      yaxis: {
+        title: 'Monthly Energy GWh',
+        showgrid: true, zeroline: false, tickformat: '.1f', ticks:'outside',
+
+      }
+    }
+    return {data, layout , config: {displayModeBar: false}}
+  }
 
   function chartAnnualYieldExceedance() {
     var data = [
@@ -176,6 +203,7 @@
     }
     return {data, layout , config: {displayModeBar: false}}
   }
+
   function chartDailyEnergyPerCalMonth() {
     var data = [
       {
@@ -216,6 +244,38 @@
 
     return {data, layout , config: {displayModeBar: false}}
   }
+
+  function chartDailyWeatherPerCalMonth() {
+    var data = [
+      {
+        x: iluteCalmonthly.map(v=>v.month),
+        y: iluteCalmonthly.map(v=>-v.meanDailyWeatherImpact),
+        type: 'bar', showlegend:false, name: 'P90',
+        mode:'lines', marker: {shape: 'spline',width:3, color: makeTrans(colors.solar[1],0.7)}
+      }]
+
+    var layout = {
+      height: 370,
+      showlegend: true, legend: {xanchor: 'left', x:0, y: -0.2, orientation:'h'},
+      margin: {l: 70,r: 5,b: 30,t: 10}, font:font,
+      xaxis: {
+        showgrid: false,
+        zeroline: false,
+        ticks:'outside',
+        tickvals: [ 1,2,3,4,5,6,7,8,9,10,11,12 ],
+        ticktext: months,
+        range:[0.5,12.5]
+      },
+      yaxis: {
+        title: 'Daily Yield Reduction',
+        showgrid: true, zeroline: false, tickformat: '.0%', ticks:'outside',
+
+      }
+    }
+
+    return {data, layout , config: {displayModeBar: false}}
+  }
+
   function chartDiurnalByMonth(indx) {
     var data = [{
       y:iluteCalmonthlyHours[indx].map(v=>v.p90HourlyEnergyMWh),
@@ -258,7 +318,27 @@
     <v-row :class="!smAndUp?'ma-0 pa-0':'pa-5'">
       <v-col cols="12">
         <h1>Ilute I Solar PV Project - Yield Analysis</h1>
-
+      </v-col>
+      <v-col cols="12">
+        <h2>Project</h2>
+      </v-col>
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="6" xl="4">
+          <b>Capacity:</b>&nbsp;{{iluteStatistics.capacity}}  MW<br>
+          <b>Mean annual energy:</b>&nbsp;{{format(',.0f')(iluteStatistics.medianAnnualEnergyMWh/1000)}} GWh<br>
+          <b>Mean specific energy:</b>&nbsp;{{format(',.1f')(iluteStatistics.meanAnnualSpecificYield/1000)}} GWh/MW<br>
+          <b>Mean capacity factor:</b>&nbsp;{{format(',.0%')(iluteStatistics.meanAnnualCapFactor)}} <br>
+          <b>Coefficient of variation annual energy:</b>&nbsp;{{format(',.0%')(iluteStatistics.coefVarAnnualEnergy)}} <br>
+      </v-col>
+      <v-col cols="12">
+        <h2>Yield Timeseries</h2>
+      </v-col>
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="10" xl="8">
+        <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
+          <PlotlyChart :definition="chartMonthlyEnergy()" />
+          <figcaption>
+           Monthly energy yield for the Ilute I Solar PV Plant.
+        </figcaption>
+        </v-sheet>
       </v-col>
       <v-col cols="12">
         <h2>Annual Yield</h2>
@@ -283,7 +363,7 @@
       <v-col cols="12">
         <h2>Monthly Yield</h2>
       </v-col>
-      <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="8" xl="6">
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
           <PlotlyChart :definition="chartMonthlyEnergyPerCalMonth()" />
           <figcaption>
@@ -295,7 +375,7 @@
       <v-col cols="12">
         <h2>Daily Yield</h2>
       </v-col>
-      <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="8" xl="6">
         <v-sheet :class="smAndUp?'border ml-2 pl-2':'border ma-0 pa-0'">
           <PlotlyChart :definition="chartDailyEnergyPerCalMonth()" />
           <figcaption>
@@ -304,7 +384,16 @@
         </figcaption>
         </v-sheet>
       </v-col>
-      <v-col :class="smAndUp?'':'px-0'" cols="12" md="6"></v-col>
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="8" xl="6">
+        <v-sheet :class="smAndUp?'border ml-2 pl-2':'border ma-0 pa-0'">
+          <PlotlyChart :definition="chartDailyWeatherPerCalMonth()" />
+          <figcaption>
+            Average daily reduction in energy yield due to weather conditions by calendar month for the Ilute I Solar PV Plant.
+          </figcaption>
+        </v-sheet>
+      </v-col>
+
+
       <v-col cols="12">
         <h2>Diurnal Yield Variability</h2>
       </v-col>

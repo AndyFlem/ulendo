@@ -21,13 +21,13 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
     return ret
   }, v=>v.hour).map(v=>v[1])
 
-  const daily = d3.rollups(hourly,v=>{
+  const daily_tmp = d3.rollups(hourly,v=>{
     let ret = {
       date: v[0].date,
       year: v[0].year,
       month: v[0].month,
       day: v[0].day,
-      capFactor: (d3.sum(v,h=>h.energyMWh))/ (capacityMW * 24),
+      capFactor: d3.sum(v,h=>h.capFactor)/24,
       energyMWh: d3.sum(v,h=>h.energyMWh)
     }
     ret.specificYield = ret.capFactor * 24
@@ -35,18 +35,35 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
     return ret
   }, v=>v.date.startOf('day')).map(v=>v[1])
 
+  const weatherFreeCalMonthly = d3.rollups(daily_tmp, d => {
+    let ret =  {
+      month: d[0].date.month,
+      weatherFreeCapFactor: d3.max(d, v=>v.capFactor),
+    }
+    return ret
+  }, d => d.date.month).map(v=>v[1])
+
+
+  const daily = daily_tmp.map(v=>{
+    const wf = weatherFreeCalMonthly.find(c=>c.month==v.date.month).weatherFreeCapFactor
+    v.weatherImpact = (v.capFactor - wf)/wf
+    return v
+  })
+
   const monthly = d3.rollups(daily, d => {
     let ret =  {
       date: d[0].date.startOf('month'),
+      datetime: d[0].date.toISO(),
       year: d[0].date.year,
       month: d[0].date.month,
+      meanDailyWeatherImpact: d3.mean(d, v=>v.weatherImpact),
       meanDailyCapFactor: d3.mean(d, v=>v.capFactor),
       specificYield: d3.sum(d, v => v.capFactor * 24),  //MWh/MW
       energyMWh: d3.sum(d, v=>v.energyMWh),
       meanDailyEnergyMWh: d3.mean(d, v=>v.energyMWh),
       p90DailyEnergyMWh: d3.quantile(d, 0.9, v=>v.energyMWh),
       p10DailyEnergyMWh: d3.quantile(d, 0.1, v=>v.energyMWh),
-      stdevDailyEnergyMWh: d3.deviation(d, v=>v.energyMWh),
+      stdevDailyEnergyMWh: d3.deviation(d, v=>v.energyMWh)
     }
     ret.coefVarDailyEnergy = ret.stdevDailyEnergyMWh/ret.meanDailyEnergyMWh
     return ret
@@ -56,14 +73,15 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
     return {
       year: d[0].year,
       specificYield: d3.sum(d,v=>v.specificYield),
-      energyMWh: d3.sum(d,v=>v.energyMWh)
+      energyMWh: d3.sum(d,v=>v.energyMWh),
+      meanDailyWeatherImpact: d3.mean(d, v=>v.meanDailyWeatherImpact),
     }
   }, d => d.year).map(v=>v[1])
 
-  const medianAnualSpecificYield=d3.median(yearly_tmp, v => v.specificYield)
+  const medianAnnualSpecificYield=d3.median(yearly_tmp, v => v.specificYield)
 
   const yearly = yearly_tmp.map(v=>{
-    v.normalisedSpecificYield = v.specificYield / medianAnualSpecificYield
+    v.normalisedSpecificYield = v.specificYield / medianAnnualSpecificYield
     return v
   })
 
@@ -72,6 +90,7 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
       date: d[0].date,
       month: d[0].month,
 
+      meanDailyWeatherImpact: d3.mean(d, v=>v.weatherImpact),
       p90DailyCapFactor: d3.quantile(d, 0.9, v=>v.capFactor),
       p10DailyCapFactor: d3.quantile(d, 0.1, v=>v.capFactor),
       maxDailyCapFactor: d3.max(d, v=>v.capFactor),
@@ -102,7 +121,6 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
     return ret
   }, d => d.month).map(v=>v[1])
 
-
   const calmonthlyHours = (() => {
     let mons = Array.from(new Array(12), (x,i) => i+1)
 
@@ -124,7 +142,6 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
       },v=>v.hour).map(v=>v[1])
     })
   })()
-
 
   const annualExceedance=Array.from(new Array(11), (x,i) => {
     const ex = 1-(i/10)
@@ -155,12 +172,14 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
 
   })()
 
-
   const statistics = [{
     years: yearly.length,
     months: monthly.length,
+    capacity: capacityMW,
     medianAnnualEnergyMWh: d3.median(yearly, v=>v.energyMWh),
     meanAnnualEnergyMWh: d3.mean(yearly, v=>v.energyMWh),
+    meanAnnualCapFactor: d3.mean(yearly, v=>v.energyMWh)/(24*365*capacityMW),
+    meanDailyWeatherImpact: d3.mean(yearly, v=>v.meanDailyWeatherImpact),
 
     p95AnnualEnergyMWh: d3.quantile(yearly, 0.95, v=>v.energyMWh),
     p90AnnualEnergyMWh: d3.quantile(yearly, 0.9, v=>v.energyMWh),
@@ -168,23 +187,26 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
     p25AnnualEnergyMWh: d3.quantile(yearly, 0.25, v=>v.energyMWh),
     p10AnnualEnergyMWh: d3.quantile(yearly, 0.1, v=>v.energyMWh),
     p05AnnualEnergyMWh: d3.quantile(yearly, 0.05, v=>v.energyMWh),
-    medianAnualSpecificYieldMWhperMW: medianAnualSpecificYield,
-    meanAnnualSpecificYieldMWhperMW: d3.mean(yearly, v => v.specificYield),
+    medianAnnualSpecificYield: medianAnnualSpecificYield,
+    meanAnnualSpecificYield: d3.mean(yearly, v => v.specificYield),
     coefVarAnnualEnergy: d3.deviation(yearly, v=>v.energyMWh)/d3.mean(yearly, v=>v.energyMWh),
   }]
 
+
+  fs.writeFileSync(folder + `/output/${filePrefix}Hourly.csv`, d3.csvFormat(hourly))
+  fs.writeFileSync(folder + `/output/${filePrefix}Daily.csv`, d3.csvFormat(daily))
   fs.writeFileSync(folder + `/output/${filePrefix}Diurnal.csv`, d3.csvFormat(diurnal))
   fs.writeFileSync(folder + `/output/${filePrefix}Monthly.csv`, d3.csvFormat(monthly))
+
   fs.writeFileSync(folder + `/output/${filePrefix}Yearly.csv`, d3.csvFormat(yearly))
   fs.writeFileSync(folder + `/output/${filePrefix}Calmonthly.csv`, d3.csvFormat(calmonthly))
+  fs.writeFileSync(folder + `/output/${filePrefix}WeatherFreeCalMonthly.csv`, d3.csvFormat(weatherFreeCalMonthly))
   fs.writeFileSync(folder + `/output/${filePrefix}CalmonthlyHours.csv`, d3.csvFormat(calmonthlyHours.flat()))
   fs.writeFileSync(folder + `/output/${filePrefix}AnnualExceedance.csv`, d3.csvFormat(annualExceedance))
   fs.writeFileSync(folder + `/output/${filePrefix}DurationVariability.csv`, d3.csvFormat(durationVariability))
   fs.writeFileSync(folder + `/output/${filePrefix}Statistics.csv`, d3.csvFormat(statistics))
 
 }
-
-
 
 function normalinv(p, mean, std) {
   return -1.41421356237309505 * std * erfcinv(2 * p) + mean;

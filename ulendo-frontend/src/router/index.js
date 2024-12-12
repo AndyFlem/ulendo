@@ -10,7 +10,13 @@ const pageGroups = [
       {
         name: 'WindSolarStorageFirm',
         title: 'Zambian Wind, Solar & Storage Combinations for a Firm Diurnal'
-      }
+      },
+      {
+        name: 'SolarComparison',
+        title: 'Sesheke & Copperbelt Solar PV Comparison'
+      },
+
+
     ]
   },
   {
@@ -106,6 +112,11 @@ const routes = [
     name: 'LumwanaSupplyDemand',
     meta: {groups:['barrick']},
     component: () => import(/* webpackChunkName: "lumwana-supply-demand" */ '@/pages/barrick/LumwanaSupplyDemand.vue'),
+  }, {
+    path: '/solar-comparison',
+    name: 'SolarComparison',
+    meta: {groups:['public']},
+    component: () => import(/* webpackChunkName: "solar-comparison" */ '@/pages/barrick/SolarComparison.vue'),
   }, {
     path: '/sapp/dam',
     name: 'SAPP_DAM',

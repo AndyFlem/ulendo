@@ -20,9 +20,37 @@
   import unikaStatistics_raw from '@/data/unika/output/unikaStatistics.csv'
   import unikaCalmonthly from '@/data/unika/output/unikaCalmonthly.csv'
   const unikaStatistics = unikaStatistics_raw[0]
+  console.log(unikaStatistics)
   import unikaCalmonthlyHours_raw from '@/data/unika/output/unikaCalmonthlyHours.csv'
   const unikaCalmonthlyHours = groups(unikaCalmonthlyHours_raw, d => d.month).map(v=>v[1])
+  import unikaMonthly from '@/data/unika/output/unikaMonthly.csv'
 
+  function chartMonthlyEnergy() {
+    var data = [
+      {
+        x: unikaMonthly.map(v=>v.datetime),
+        y: unikaMonthly.map(v=>v.energyMWh/1000),
+        type: 'bar', showlegend:false,
+        marker: {color: makeTrans(colors.wind[1],0.7)}
+      }]
+
+    var layout = {
+      height: 320,
+      showlegend: true, legend: {xanchor: 'left', x:0, y: -0.2, orientation:'h'},
+      margin: {l: 70,r: 5,b: 30,t: 10}, font:font,
+      xaxis: {
+        showgrid: false,
+        zeroline: false,
+        ticks:'outside',
+      },
+      yaxis: {
+        title: 'Monthly Energy GWh',
+        showgrid: true, zeroline: false, tickformat: '.0f', ticks:'outside',
+
+      }
+    }
+    return {data, layout , config: {displayModeBar: false}}
+  }
 
   function chartAnnualYieldExceedance() {
     var data = [
@@ -176,6 +204,7 @@
     }
     return {data, layout , config: {displayModeBar: false}}
   }
+
   function chartDailyEnergyPerCalMonth() {
     var data = [
       {
@@ -216,6 +245,7 @@
 
     return {data, layout , config: {displayModeBar: false}}
   }
+
   function chartDiurnalByMonth(indx) {
     var data = [{
       y:unikaCalmonthlyHours[indx].map(v=>v.p90HourlyEnergyMWh),
@@ -258,7 +288,27 @@
     <v-row :class="!smAndUp?'ma-0 pa-0':'pa-5'">
       <v-col cols="12">
         <h1>Unika II Wind Project - Yield Analysis</h1>
-
+      </v-col>
+      <v-col cols="12">
+        <h2>Project</h2>
+      </v-col>
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="6" xl="4">
+          <b>Capacity:</b>&nbsp;{{unikaStatistics.capacity}}  MW<br>
+          <b>Mean annual energy:</b>&nbsp;{{format(',.0f')(unikaStatistics.medianAnnualEnergyMWh/1000)}} GWh<br>
+          <b>Mean specific energy:</b>&nbsp;{{format(',.1f')(unikaStatistics.meanAnnualSpecificYield/1000)}} GWh/MW<br>
+          <b>Mean capacity factor:</b>&nbsp;{{format(',.0%')(unikaStatistics.meanAnnualCapFactor)}} <br>
+          <b>Coefficient of variation annual energy:</b>&nbsp;{{format(',.0%')(unikaStatistics.coefVarAnnualEnergy)}} <br>
+      </v-col>
+      <v-col cols="12">
+        <h2>Yield Timeseries</h2>
+      </v-col>
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="10" xl="8">
+        <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
+          <PlotlyChart :definition="chartMonthlyEnergy()" />
+          <figcaption>
+           Monthly energy yield for the Unika II Wind Plant.
+        </figcaption>
+        </v-sheet>
       </v-col>
       <v-col cols="12">
         <h2>Annual Yield</h2>
@@ -283,7 +333,7 @@
       <v-col cols="12">
         <h2>Monthly Yield</h2>
       </v-col>
-      <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="8" xl="6">
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
           <PlotlyChart :definition="chartMonthlyEnergyPerCalMonth()" />
           <figcaption>
@@ -295,7 +345,7 @@
       <v-col cols="12">
         <h2>Daily Yield</h2>
       </v-col>
-      <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="8" xl="6">
         <v-sheet :class="smAndUp?'border ml-2 pl-2':'border ma-0 pa-0'">
           <PlotlyChart :definition="chartDailyEnergyPerCalMonth()" />
           <figcaption>
@@ -313,7 +363,6 @@
           <v-col :key="mon" v-for="mon in Array.from(new Array(12), (x,i) => i)" cols="12" sm="6" md="4">
             <PlotlyChart :definition="chartDiurnalByMonth(mon)" />
           </v-col>
-
           <figcaption>
             Average diurnal energy yield for the Unika II Wind Plant by calendar month showing the P90 to P10 range of hourly energy yield (filled area)
             and the median hourly energy yield (solid line).

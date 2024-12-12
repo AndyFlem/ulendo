@@ -27,11 +27,13 @@ fs.writeFileSync(folder + '/output/parameters.json', JSON.stringify(params, null
 // Ilute data processing
 //****************************************************************
 const iluteHourly = d3.csvParse(fs.readFileSync(folder + '/input/ilute_25mw_yield.csv', 'utf-8'), d3.autoType).map(v=> {
-  v.date=DateTime.fromObject({year:v.year,month:v.month,day:v.day, hour: v.hour})
+  v.date=DateTime.fromObject({year:v.year, month:v.month, day:v.day, hour: v.hour},{zone: 'CAT'} )
+  v.datetime = v.date.toISO({includeOffset: true})
   v.energyMWh=parseFloat(v.kw)/25*params.capacitySolarMW/1000
   v.capFactor = parseFloat(v.kw)/(25*1000)
   return v
 })
+console.log(iluteHourly[0])
 
 
 processHourly(iluteHourly, params.capacitySolarMW, folder, 'ilute')

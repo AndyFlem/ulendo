@@ -23,13 +23,15 @@ const params = {
 }
 fs.writeFileSync(folder + '/output/parameters.json', JSON.stringify(params, null, 2))
 
+const rawCapacity = 50
+
 //****************************************************************
 // Kalumbila data processing
 //****************************************************************
 const kalumbilaHourly = d3.csvParse(fs.readFileSync(folder + '/input/kalumbila_50mw_1hour_yield.csv', 'utf-8'), d3.autoType).map(v=> {
   v.date=DateTime.fromObject({year:v.year,month:v.month,day:v.day, hour: v.hour})
-  v.energyMWh=parseFloat(v.kw)/50*params.capacitySolarMW/1000
-  v.capFactor = parseFloat(v.kw)/(50*1000)
+  v.energyMWh=parseFloat(v.kw_clipped)/rawCapacity*params.capacitySolarMW/1000
+  v.capFactor = parseFloat(v.kw_clipped)/(rawCapacity*1000)
   return v
 })
 

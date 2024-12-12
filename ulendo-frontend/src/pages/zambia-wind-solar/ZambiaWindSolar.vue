@@ -84,10 +84,10 @@
     wind: 2,
     hydro: 3.5
   }
-
+console.log(solarStatistics)
   const specificCapitalCostOfAnnualEnergy = {
-    solar: (specificCapitalCost.solar*1000000) / (solarStatistics.medianAnualSpecificYield), //$/GWh/year
-    wind: (specificCapitalCost.wind*1000000) / (windStatistics.medianAnualSpecificYield), //$/GWh/year
+    solar: (specificCapitalCost.solar*1000000) / (solarStatistics.medianAnnualSpecificYield), //$/GWh/year
+    wind: (specificCapitalCost.wind*1000000) / (windStatistics.medianAnnualSpecificYield), //$/GWh/year
   }
 
   function chartRelativeYieldExceedance() {
@@ -136,9 +136,9 @@
         type: 'scatter', showlegend:true, hoverinfo:'x+y',name: 'Solar',
         mode:'lines', line: {shape: '',width:3.5, color: colors.solar[1]}
       },{
-        text: [format(',.2f')(solarStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'],
+        text: [format(',.2f')(solarStatistics.medianAnnualSpecificYield/1000) + ' GWh/MW/year'],
         x: [0.5],
-        y: [solarStatistics.medianAnualSpecificYield/1000],
+        y: [solarStatistics.medianAnnualSpecificYield/1000],
         type: 'scatter', showlegend:false,hoverinfo:'y',textposition:'bottomright',
         mode:'markers+text', marker:{size:10, color:'#666'}
       },{
@@ -147,9 +147,9 @@
         type: 'scatter', showlegend:true, hoverinfo:'x+y', name: 'Wind',
         mode:'lines', line: {shape: '',width:3.5, color: colors.wind[1]}
       },{
-        text: [format(',.2f')(windStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'],
+        text: [format(',.2f')(windStatistics.medianAnnualSpecificYield/1000) + ' GWh/MW/year'],
         x: [0.5],
-        y: [windStatistics.medianAnualSpecificYield/1000],
+        y: [windStatistics.medianAnnualSpecificYield/1000],
         type: 'scatter', showlegend:false,hoverinfo:'y',textposition:'bottomright',
         mode:'markers+text', marker:{size:10, color:'#666'}
       }]
@@ -642,10 +642,10 @@
         </v-sheet>
       </v-col>
       <v-col cols="12">
-        At {{format(',.1f')(windStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'}}, wind
-        provides {{format(',.0%')((windStatistics.medianAnualSpecificYield-solarStatistics.medianAnualSpecificYield)/solarStatistics.medianAnualSpecificYield)}}
+        At {{format(',.1f')(windStatistics.medianAnnualSpecificYield/1000) + ' GWh/MW/year'}}, wind
+        provides {{format(',.0%')((windStatistics.medianAnnualSpecificYield-solarStatistics.medianAnnualSpecificYield)/solarStatistics.medianAnnualSpecificYield)}}
         more energy on an annual basis than the same capacity of solar generation
-        at {{format(',.1f')(solarStatistics.medianAnualSpecificYield/1000) + ' GWh/MW/year'}}.
+        at {{format(',.1f')(solarStatistics.medianAnnualSpecificYield/1000) + ' GWh/MW/year'}}.
         <br/><br/>
         However, wind capacity has a higer capital cost - approx.
         {{'$' + format(',.1f')(specificCapitalCost.wind) + ' million/MW'}} - than solar at
