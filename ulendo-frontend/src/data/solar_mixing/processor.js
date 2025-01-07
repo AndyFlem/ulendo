@@ -104,6 +104,7 @@ const calmonthly = daily.map(c=>{
 
     ret.coefVarDailyCapFactor = ret.stdevDailyCapFactor/ret.meanDailyCapFactor
 
+
     ret.p90MonthlySpecificYield = d3.quantile(monthly.filter(v=>v.month==d[0].month),0.9,v=>v.specificYield)
     ret.p10MonthlySpecificYield = d3.quantile(monthly.filter(v=>v.month==d[0].month),0.1,v=>v.specificYield)
     ret.meanMonthlySpecificYield = d3.mean(monthly.filter(v=>v.month==d[0].month),v=>v.specificYield)
