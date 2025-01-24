@@ -79,8 +79,6 @@ const monthly = daily.map(c=>{
   }, d => d.date.startOf('month')).map(v=>v[1])
 }).flat()
 
-
-
 const calmonthly = daily.map(c=>{
   return d3.rollups(c, d  => {
     let ret =  {

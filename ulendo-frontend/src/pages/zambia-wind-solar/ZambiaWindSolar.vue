@@ -23,12 +23,12 @@
   import solarCalmonthlyHours_raw from '@/data/ilute/output/iluteCalmonthlyHours.csv'
   const solarCalmonthlyHours = groups(solarCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
-  import windAnnualExceedance from '@/data/unika/output/unikaAnnualExceedance.csv'
-  import windStatistics_raw from '@/data/unika/output/unikaStatistics.csv'
+  import windAnnualExceedance from '@/data/unika2/output/unikaAnnualExceedance.csv'
+  import windStatistics_raw from '@/data/unika2/output/unikaStatistics.csv'
   const windStatistics=windStatistics_raw[0]
-  import windYearly from '@/data/unika/output/unikaYearly.csv'
-  import windCalmonthly from '@/data/unika/output/unikaCalmonthly.csv'
-  import windCalmonthlyHours_raw from '@/data/unika/output/unikaCalmonthlyHours.csv'
+  import windYearly from '@/data/unika2/output/unikaYearly.csv'
+  import windCalmonthly from '@/data/unika2/output/unikaCalmonthly.csv'
+  import windCalmonthlyHours_raw from '@/data/unika2/output/unikaCalmonthlyHours.csv'
   const windCalmonthlyHours = groups(windCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
   import dailyCapFactorFeb2019 from '@/data/zambia_wind_solar/output/dailyCapFactorFeb2019.csv'

@@ -34,23 +34,6 @@ const windHourly = d3.csvParse(fs.readFileSync(folder + '/input/unika_180mw_yiel
   return v
 })
 
-//const monthDays=[31,28,31,30,31,30,31,31,30,31,30,31]
-
-//****************************************************************
-// Wind data processing
-//****************************************************************
-/*
-const windDiurnal = d3.rollups(windHourly,v=>{
-  let ret = {
-    hour: v[0].hour,
-    capFactor: (d3.mean(v,h=>h.capFactor))
-  }
-  ret.dailySpecificYield = ret.dailyCapFactor * 24
-
-  return ret
-}, v=>v.hour).map(v=>v[1])
-fs.writeFileSync(folder + '/output/windDiurnal.csv', d3.csvFormat(windDiurnal))
-*/
 const windDaily = d3.rollups(windHourly,v=>{
   let ret = {
     date: v[0].date,
@@ -64,107 +47,6 @@ const windDaily = d3.rollups(windHourly,v=>{
   return ret
 }, v=>v.date.startOf('day')).map(v=>v[1])
 
-/*
-const windMonthly = d3.rollups(windDaily, d => {
-  return {
-    date: d[0].date.startOf('month'),
-    year: d[0].date.year,
-    month: d[0].date.month,
-    meanDailyCapFactor: d3.mean(d, v=>v.dailyCapFactor),
-    monthlySpecificYield: d3.sum(d, v => v.dailyCapFactor * 24)  //MWh/MW
-  }
-}, d => d.date.startOf('month')).map(v=>v[1])
-//Save the monthly data to a CSV file
-fs.writeFileSync(folder + '/output/windMonthly.csv', d3.csvFormat(windMonthly))
-
-const windYearly_tmp = d3.rollups(windMonthly, d => {
-  return {
-    year: d[0].year,
-    yearlySpecificYield: d3.sum(d,v=>v.monthlySpecificYield)
-  }
-}, d => d.year).map(v=>v[1])
-const windMedianAnualSpecificYield=d3.median(windYearly_tmp,v=>v.yearlySpecificYield)
-
-const windYearly = windYearly_tmp.map(v=>{
-  v.normalisedYearlySpecificYield = v.yearlySpecificYield/windMedianAnualSpecificYield
-  return v
-})
-fs.writeFileSync(folder + '/output/windYearly.csv', d3.csvFormat(windYearly))
-
-const windCalmonthly = d3.rollups(windDaily, d  => {
-  let ret =  {
-    date: d[0].date,
-    month: d[0].month,
-    p90DailyCapFactor: d3.quantile(d, 0.9, v=>v.dailyCapFactor),
-    p10DailyCapFactor: d3.quantile(d, 0.1, v=>v.dailyCapFactor),
-    maxDailyCapFactor: d3.max(d, v=>v.dailyCapFactor),
-    meanDailyCapFactor: d3.mean(d, v=>v.dailyCapFactor),
-    maxDailySpecificYield: d3.max(d, v=>v.dailySpecificYield),
-    p90DailySpecificYield: d3.quantile(d, 0.9, v=>v.dailySpecificYield),
-    p10DailySpecificYield: d3.quantile(d, 0.1, v=>v.dailySpecificYield),
-    meanDailySpecificYield: d3.mean(d, v=>v.dailySpecificYield),
-    medianDailySpecificYield: d3.quantile(d, 0.5, v=>v.dailySpecificYield),
-  }
-  ret.maxMonthlySpecificYield = ret.maxDailySpecificYield * monthDays[ret.month-1]//MWh/MW taking account of seasonality
-
-  ret.meanMonthlySpecificYield = d3.mean(windMonthly.filter(v=>v.month==d[0].month),v=>v.monthlySpecificYield)
-  ret.medianMonthlySpecificYield = d3.quantile(windMonthly.filter(v=>v.month==d[0].month),0.5,v=>v.monthlySpecificYield)
-  ret.p90MonthlySpecificYield = d3.quantile(windMonthly.filter(v=>v.month==d[0].month),0.9,v=>v.monthlySpecificYield)
-  ret.p10MonthlySpecificYield = d3.quantile(windMonthly.filter(v=>v.month==d[0].month),0.1,v=>v.monthlySpecificYield)
-  return ret
-}, d => d.month).map(v=>v[1])
-fs.writeFileSync(folder + '/output/windCalmonthly.csv', d3.csvFormat(windCalmonthly))
-
-const windCalmonthlyHours = (() => {
-  let mons = Array.from(new Array(12), (x,i) => i+1)
-
-  return mons.map(m=>{
-    return d3.rollups(windHourly.filter(d=>d.month==m), v=>{
-      return {
-        month: m,
-        hour: v[0].hour,
-        meanHourlyCapFactor: d3.mean(v,l=>l.capFactor),
-        p90HourlyCapFactor: d3.quantile(v, 0.9, l=>l.capFactor),
-        p10HourlyCapFactor: d3.quantile(v, 0.1, l=>l.capFactor)
-      }
-    },v=>v.hour).map(v=>v[1])
-  })
-})()
-fs.writeFileSync(folder + '/output/windCalmonthlyHours.csv', d3.csvFormat(windCalmonthlyHours.flat()))
-
-const windAnnualExceedance=windYearly.toSorted((a,b) => a.yearlySpecificYield-b.yearlySpecificYield).map((v,i) => {
-  v.exceedance = 1-(i/windYearly.length)
-  v.normalisedYearlySpecificYield = v.yearlySpecificYield/windMedianAnualSpecificYield
-  return v
-})
-fs.writeFileSync(folder + '/output/windAnnualExceedance.csv', d3.csvFormat(windAnnualExceedance))
-
-const windDurationVariability= (()=>{
-  let durations = [5, 10, 15, 18, 20, 25]
-
-  let stDev = d3.deviation(windYearly,v=>v.yearlySpecificYield)
-  let mean = d3.mean(windYearly,v=>v.yearlySpecificYield)
-
-  return durations.map(d=>{
-    return {
-      duration_years: d,
-      stDev: stDev/Math.sqrt(d),
-      p50: mean,
-      p75: normalinv(0.25, mean, stDev/Math.sqrt(d)),
-      p90: normalinv(0.10, mean, stDev/Math.sqrt(d)),
-      p99: normalinv(0.01, mean, stDev/Math.sqrt(d))
-    }
-  })
-})()
-fs.writeFileSync(folder + '/output/windDurationVariability.csv', d3.csvFormat(windDurationVariability))
-
-const windStatistics = [{
-  years: windYearly.length,
-  months: windMonthly.length,
-  medianAnualSpecificYield: windMedianAnualSpecificYield
-}]
-fs.writeFileSync(folder + '/output/windStatistics.csv', d3.csvFormat(windStatistics))
-*/
 
 const solarDaily = d3.rollups(solarHourly,v=>{
   let ret = {
@@ -178,125 +60,6 @@ const solarDaily = d3.rollups(solarHourly,v=>{
 
   return ret
 }, v=>v.date.startOf('day')).map(v=>v[1])
-
-/*
-//****************************************************************
-// Solar data processing
-//****************************************************************
-const solarDiurnal = d3.rollups(solarHourly,v=>{
-  let ret = {
-    hour: v[0].hour,
-    capFactor: (d3.mean(v,h=>h.capFactor))
-  }
-  ret.dailySpecificYield = ret.dailyCapFactor * 24
-
-  return ret
-}, v=>v.hour).map(v=>v[1])
-fs.writeFileSync(folder + '/output/solarDiurnal.csv', d3.csvFormat(solarDiurnal))
-
-
-const solarMonthly = d3.rollups(solarDaily, d => {
-  return {
-    date: d[0].date.startOf('month'),
-    year: d[0].date.year,
-    month: d[0].date.month,
-    meanDailyCapFactor: d3.mean(d, v=>v.dailyCapFactor),
-    monthlySpecificYield: d3.sum(d, v => v.dailyCapFactor * 24)  //MWh/MW
-  }
-}, d => d.date.startOf('month')).map(v=>v[1])
-fs.writeFileSync(folder + '/output/solarMonthly.csv', d3.csvFormat(solarMonthly))
-
-const solarYearly_tmp = d3.rollups(solarMonthly, d => {
-  return {
-    year: d[0].year,
-    yearlySpecificYield: d3.sum(d,v=>v.monthlySpecificYield)
-  }
-}, d => d.year).map(v=>v[1])
-const solarMedianAnualSpecificYield=d3.median(solarYearly_tmp,v=>v.yearlySpecificYield)
-
-const solarYearly = solarYearly_tmp.map(v=>{
-  v.normalisedYearlySpecificYield = v.yearlySpecificYield/solarMedianAnualSpecificYield
-  return v
-})
-fs.writeFileSync(folder + '/output/solarYearly.csv', d3.csvFormat(solarYearly))
-
-const solarCalmonthly = d3.rollups(solarDaily, d  => {
-  let ret =  {
-    date: d[0].date,
-    month: d[0].month,
-    p90DailyCapFactor: d3.quantile(d, 0.9, v=>v.dailyCapFactor),
-    p10DailyCapFactor: d3.quantile(d, 0.1, v=>v.dailyCapFactor),
-    maxDailyCapFactor: d3.max(d, v=>v.dailyCapFactor),
-    meanDailyCapFactor: d3.mean(d, v=>v.dailyCapFactor),
-    maxDailySpecificYield: d3.max(d, v=>v.dailySpecificYield),
-    p90DailySpecificYield: d3.quantile(d, 0.9, v=>v.dailySpecificYield),
-    p10DailySpecificYield: d3.quantile(d, 0.1, v=>v.dailySpecificYield),
-    meanDailySpecificYield: d3.mean(d, v=>v.dailySpecificYield),
-    medianDailySpecificYield: d3.quantile(d, 0.5, v=>v.dailySpecificYield),
-  }
-  ret.maxMonthlySpecificYield = ret.maxDailySpecificYield * monthDays[ret.month-1]//MWh/MW taking account of seasonality
-
-  ret.meanMonthlySpecificYield = d3.mean(solarMonthly.filter(v=>v.month==d[0].month),v=>v.monthlySpecificYield)
-  ret.medianMonthlySpecificYield = d3.quantile(solarMonthly.filter(v=>v.month==d[0].month),0.5,v=>v.monthlySpecificYield)
-  ret.p90MonthlySpecificYield = d3.quantile(solarMonthly.filter(v=>v.month==d[0].month),0.9,v=>v.monthlySpecificYield)
-  ret.p10MonthlySpecificYield = d3.quantile(solarMonthly.filter(v=>v.month==d[0].month),0.1,v=>v.monthlySpecificYield)
-
-  return ret
-}, d => d.month).map(v=>v[1])
-fs.writeFileSync(folder + '/output/solarCalmonthly.csv', d3.csvFormat(solarCalmonthly))
-
-const solarCalmonthlyHours=(()=>{
-  let mons = Array.from(new Array(12), (x,i) => i+1)
-
-  return mons.map(m=>{
-    return d3.rollups(solarHourly.filter(d=>d.month==m), v=>{
-      return {
-        month: m,
-        hour: v[0].hour,
-        meanHourlyCapFactor: d3.mean(v,l=>l.capFactor),
-        p90HourlyCapFactor: d3.quantile(v, 0.9, l=>l.capFactor),
-        p10HourlyCapFactor: d3.quantile(v, 0.1, l=>l.capFactor)
-      }
-    },v=>v.hour).map(v=>v[1])
-  })
-})()
-fs.writeFileSync(folder + '/output/solarCalmonthlyHours.csv', d3.csvFormat(solarCalmonthlyHours.flat()))
-
-const solarAnnualExceedance=solarYearly.toSorted((a,b) => a.yearlySpecificYield-b.yearlySpecificYield).map((v,i) => {
-  v.exceedance = 1-(i/solarYearly.length)
-  v.normalisedYearlySpecificYield = v.yearlySpecificYield/solarMedianAnualSpecificYield
-  return v
-})
-fs.writeFileSync(folder + '/output/solarAnnualExceedance.csv', d3.csvFormat(solarAnnualExceedance))
-
-const solarDurationVariability = (()=>{
-  let durations = [5, 10, 15, 18, 20, 25]
-
-  let stDev = d3.deviation(solarYearly,v=>v.yearlySpecificYield)
-  let mean = d3.mean(solarYearly,v=>v.yearlySpecificYield)
-
-  return durations.map(d=>{
-    return {
-      duration_years: d,
-      stDev: stDev/Math.sqrt(d),
-      p50: mean,
-      p75: normalinv(0.25, mean, stDev/Math.sqrt(d)),
-      p90: normalinv(0.10, mean, stDev/Math.sqrt(d)),
-      p99: normalinv(0.01, mean, stDev/Math.sqrt(d))
-    }
-  })
-
-})()
-fs.writeFileSync(folder + '/output/solarDurationVariability.csv', d3.csvFormat(solarDurationVariability))
-
-const solarStatistics = [{
-  years: solarYearly.length,
-  months: solarMonthly.length,
-  medianAnualSpecificYield: solarMedianAnualSpecificYield
-}]
-fs.writeFileSync(folder + '/output/solarStatistics.csv', d3.csvFormat(solarStatistics))
-
-*/
 
 const period1 = {from: DateTime.fromObject({year:2019,month:2,day:9}), to: DateTime.fromObject({year:2019,month:2,day:20})}
 const period2 = {from: DateTime.fromObject({year:2019,month:6,day:9}), to: DateTime.fromObject({year:2019,month:6,day:20})}
@@ -334,11 +97,6 @@ function periodCapFactor(from, to, name){
   fs.writeFileSync(folder + `/output/dailyCapFactor${name}.csv`, d3.csvFormat(days))
   fs.writeFileSync(folder + `/output/hourlyCapFactor${name}.csv`, d3.csvFormat(hours))
 }
-
-
-//****************************************************************
-// Wind + solar combined data processing
-//****************************************************************
 const combinedHourly = windHourly.map((h,i)=>{
   let ret = {
     date: h.date,
@@ -369,6 +127,7 @@ const combinedDaily = d3.rollups(combinedHourly,v=>{
       solar_dailyEnergyMWh: d3.sum(v,h=>h.solar_energyMWh)
     }
     ret.dailyEnergyMWh = ret.solar_dailyEnergyMWh + ret.wind_dailyEnergyMWh
+
     ret.dailyCapFactor = (ret.solar_dailyEnergyMWh + ret.wind_dailyEnergyMWh) / ((capacityWindMW + capacitySolarMW) * 24)
 
     return ret

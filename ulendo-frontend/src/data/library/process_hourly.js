@@ -104,7 +104,8 @@ export default function processHourly(hourly, capacityMW, folder, filePrefix) {
       p90DailyEnergyMWh: d3.quantile(d, 0.9, v=>v.energyMWh),
       p10DailyEnergyMWh: d3.quantile(d, 0.1, v=>v.energyMWh),
       meanDailyEnergyMWh: d3.mean(d, v=>v.energyMWh),
-      medianDailyEnergyMWh: d3.median(d, v=>v.energyMWh)
+      medianDailyEnergyMWh: d3.median(d, v=>v.energyMWh),
+      coefVarDailyEnergy: d3.deviation(d, v=>v.energyMWh)/d3.mean(d, v=>v.energyMWh),
     }
     ret.meanMonthlyEnergyMWh = d3.mean(monthly.filter(v=>v.month==d[0].month), v=>v.energyMWh)
     ret.medianMonthlyEnergyMWh = d3.median(monthly.filter(v=>v.month==d[0].month), v=>v.energyMWh)

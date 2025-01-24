@@ -1,8 +1,7 @@
 <script setup>
   import {  inject, computed } from 'vue'
   import { useDisplay } from 'vuetify'
-  import {  max } from 'd3-array'
-  //import { groups, min, max, mean, sum } from 'd3-array'
+  import { min, max, groups,sum, mean, quantile } from 'd3-array'
   import { format } from 'd3-format'
 
   import PlotlyChart from '@/components/PlotlyChart.vue'
@@ -14,10 +13,10 @@
   const colors = inject('colors')
   const font = inject('font')
   const makeTrans = inject('makeTrans')
-  //const months = inject('months')
+  const months = inject('months')
+  const monthDays=[31,28,31,30,31,30,31,31,30,31,30,31]
 
   import lumwanaDemand from '@/data/barrick/output/lumwanaDemand.csv'
-  //import parameters from '@/data/barrick/output/parameters.json'
   import unikaStatistics_raw from '@/data/unika2/output/unikaStatistics.csv'
   const unikaStatistics = unikaStatistics_raw[0]
   import kalumbilaAnnualExceedance from '@/data/kalumbila/output/kalumbilaAnnualExceedance.csv'
@@ -30,6 +29,83 @@
   import kalumbilaMonthly from '@/data/kalumbila/output/kalumbilaMonthly.csv'
   import unikaCalmonthly from '@/data/unika2/output/unikaCalmonthly.csv'
   import kalumbilaCalmonthly from '@/data/kalumbila/output/kalumbilaCalmonthly.csv'
+  //import unikaDiurnal from '@/data/unika2/output/unikaDiurnal.csv'
+  //import kalumbilaDiurnal from '@/data/kalumbila/output/kalumbilaDiurnal.csv'
+  import kalumbilaCalmonthlyHours_raw from '@/data/kalumbila/output/kalumbilaCalmonthlyHours.csv'
+  const kalumbilaCalmonthlyHours = groups(kalumbilaCalmonthlyHours_raw, d => d.month).map(v=>v[1])
+  import unikaCalmonthlyHours_raw from '@/data/unika2/output/unikaCalmonthlyHours.csv'
+  const unikaCalmonthlyHours = groups(unikaCalmonthlyHours_raw, d => d.month).map(v=>v[1])
+
+  import mixedCalmonthly from '@/data/barrick/output/combinedCalmonthly.csv'
+
+
+  import solarMixedCalmonthly_raw from '@/data/solar_mixing/output/SolarMixingCalmonthly.csv'
+  const solarMixedCalmonthly=groups(solarMixedCalmonthly_raw, d => d.site1Scale).map(v=>v[1])
+
+
+  const combinedAnnualExceedance = unikaAnnualExceedance.map((v,i) => {
+    return {
+      exceedance: v.exceedance,
+      energyMWh: v.energyMWh + kalumbilaAnnualExceedance[i].energyMWh
+    }
+  })
+
+  const combinationModels = (() => {
+    let steps = 100
+    let ret = [...Array(steps).keys()].map(v=>{
+      return {
+        ratio: (1/(steps-1))*v
+      }
+    })
+
+    ret.map(ratio => {
+      ratio.combined_cfs = [...Array(12).keys()].map(month_no=>{
+      return [...Array(24).keys()].map(hour_no =>
+        ((kalumbilaCalmonthlyHours[month_no][hour_no].meanHourlyCapFactor * ratio.ratio) + unikaCalmonthlyHours[month_no][hour_no].meanHourlyCapFactor) / (1+ratio.ratio))
+      })
+      ratio.monthly_av_cfs = [...Array(12).keys()].map(month_no=>{
+        return mean(ratio.combined_cfs[month_no])
+      })
+      ratio.monthly_max_cfs = [...Array(12).keys()].map(month_no=>{
+        return max(ratio.combined_cfs[month_no])
+      })
+      ratio.monthly_p75_cfs = [...Array(12).keys()].map(month_no=>{
+        return quantile(ratio.combined_cfs[month_no],0.75)
+      })
+      ratio.monthly_p90_cfs = [...Array(12).keys()].map(month_no=>{
+        return quantile(ratio.combined_cfs[month_no],0.90)
+      })
+
+      ratio.monthly_store = [...Array(12).keys()].map(month_no=>{
+        return sum(ratio.combined_cfs[month_no].map(v=>v>ratio.monthly_av_cfs[month_no]?v-ratio.monthly_av_cfs[month_no]:0))
+      })
+      ratio.monthly_store_tomax = [...Array(12).keys()].map(month_no=>{
+        return sum(ratio.combined_cfs[month_no].map(v=>ratio.monthly_max_cfs[month_no]-v))
+      })
+      ratio.monthly_store_top75 = [...Array(12).keys()].map(month_no=>{
+        return sum(ratio.combined_cfs[month_no].map(v=>v<ratio.monthly_p75_cfs[month_no]?ratio.monthly_p75_cfs[month_no]-v:0))
+      })
+      ratio.monthly_store_top90 = [...Array(12).keys()].map(month_no=>{
+        return sum(ratio.combined_cfs[month_no].map(v=>v<ratio.monthly_p90_cfs[month_no]?ratio.monthly_p90_cfs[month_no]-v:0))
+      })
+
+      ratio.store_hours = [...Array(12).keys()].map(month_no=>{
+        return ratio.combined_cfs[month_no].filter(v=>v>ratio.monthly_av_cfs[month_no]).length
+      })
+      ratio.store_max = max(ratio.monthly_store)
+      ratio.store_range = max(ratio.monthly_store) - min(ratio.monthly_store)
+
+      ratio.annual_store_tomean_total = sum(ratio.monthly_store.map((v,i)=>v*monthDays[i]))
+      ratio.annual_store_tomax_total = sum(ratio.monthly_store_tomax.map((v,i)=>v*monthDays[i]))
+      ratio.annual_store_top75_total = sum(ratio.monthly_store_top75.map((v,i)=>v*monthDays[i]))
+      ratio.annual_store_top90_total = sum(ratio.monthly_store_top90.map((v,i)=>v*monthDays[i]))
+
+      return ratio
+    })
+
+    return ret
+  })()
+  const optimumCombination=combinationModels.filter(w=>w.store_max==min(combinationModels.map(v=>v.store_max)))[0]
 
   const yearlyoffSet = kalumbilaYearly.length-unikaYearly.length
   const combinedYearly = unikaYearly.map((v,i) => {
@@ -80,6 +156,18 @@
     }
   })
 
+  const combinedCalmonthlyHours = unikaCalmonthlyHours.map((month, m) => {
+    return month.map((hr, h) => {
+      return {
+        month: hr.month,
+        hour: hr.hour,
+        meanHourlyEnergyMWh: hr.meanHourlyEnergyMWh + kalumbilaCalmonthlyHours[m][h].meanHourlyEnergyMWh,
+        p90HourlyEnergyMWh: hr.p90HourlyEnergyMWh + kalumbilaCalmonthlyHours[m][h].p90HourlyEnergyMWh,
+        p10HourlyEnergyMWh: hr.p10HourlyEnergyMWh + kalumbilaCalmonthlyHours[m][h].p10HourlyEnergyMWh
+      }
+    })
+  })
+
   const chartLumwanaDemand = computed(() => {
 
     var data = [
@@ -123,6 +211,53 @@
     return {data, layout , config: {displayModeBar: false}}
   })
 
+  function chartAnnualYieldExceedance() {
+    var data = [
+    {
+        x: combinedAnnualExceedance.map(v => v.exceedance),
+        y: combinedAnnualExceedance.map(v => v.energyMWh/1000),
+        type: 'scatter', showlegend:false, hoverinfo:'x+y',name: 'Combined plant',
+        mode:'lines', line: {shape: '',width:3.5, color: colors.combined[1]}
+      },{
+        text: ['P50 - ' + format(',.1f')(combinedAnnualExceedance[5].energyMWh/1000) + ' GWh/year'],
+        x: [0.5],
+        y: [combinedAnnualExceedance[5].energyMWh/1000],
+        type: 'scatter', showlegend:false,hoverinfo:'y',textposition:'bottomright',
+        mode:'markers+text', marker:{size:10, color:'#666'}
+      },{
+        text: ['P10 - ' + format(',.1f')(combinedAnnualExceedance[1].energyMWh/1000) + ' GWh/year'],
+        x: [0.1],
+        y: [combinedAnnualExceedance[1].energyMWh/1000],
+        type: 'scatter', showlegend:false,hoverinfo:'y',textposition:'left',
+        mode:'markers+text', marker:{size:10, color:'#666'}
+      },{
+        text: ['P90 - ' + format(',.1f')(combinedAnnualExceedance[9].energyMWh/1000) + ' GWh/year'],
+        x: [0.9],
+        y: [combinedAnnualExceedance[9].energyMWh/1000],
+        type: 'scatter', showlegend:false,hoverinfo:'y',textposition:'bottomright',
+        mode:'markers+text', marker:{size:10, color:'#666'}
+      }]
+
+    var layout = {
+      height: 300,
+      showlegend: true, legend: {xanchor: 'left', x:0, y: 1, orientation:'h'},
+      margin: {l: 70,r: 20,b: 50,t: 10}, font:font,
+      xaxis: {
+        showgrid: false, dtick:0.1,
+        zeroline: false, tickformat:'.0%', range: [1,-0.02],
+        ticks:'outside', title: 'Exceedance Probability'
+      },
+      yaxis: {
+        showgrid: true,zeroline: false,
+        showline: false,title: 'GWh',
+        tickformat: ',.0f',
+
+      }
+    }
+    return {data, layout , config: {displayModeBar: false}}
+  }
+
+  /*
   function chartKalumbilaAnnualYieldExceedance() {
     var data = [
       {
@@ -214,6 +349,7 @@
     }
     return {data, layout , config: {displayModeBar: false}}
   }
+  */
 
   function chartCombinedAnnual() {
 
@@ -512,7 +648,268 @@
     }
 
     return {data, layout , config: {displayModeBar: false}}
+  }
+/*
+  function chartWindSolarDiurnal() {
+    var data = [ {
+      y: unikaDiurnal.map(v=>v.meanCapFactor),
+      x: [...Array(24).keys()].map(v=>v+1),
+      name: 'Wind',
+      mode: 'lines',   line: {shape:'spline', width:2.5,color: colors.wind[1]},
+      type: 'scatter', showlegend:true, hoverinfo:'x+y', textposition:'top-center'
+    }, {
+      y: kalumbilaDiurnal.map(v=>v.meanCapFactor),
+      x: [...Array(24).keys()].map(v=>v+1),
+      name: 'Solar',
+      mode: 'lines',   line: {shape:'spline', width:2.5,color: colors.solar[1]},
+      type: 'scatter', showlegend:true, hoverinfo:'x+y', textposition:'top-center'
+    }  ]
+
+    var layout = {
+      height: 230,
+      font: font, hovermode:'closest',
+      showlegend: true, legend: {orientation: 'h',xanchor: 'left', x:0, y: 1.1},
+      margin: {l: 80,r: 5,b: 30,t: 0},
+      xaxis: {
+        showgrid: false, zeroline: false, ticks:'outside', dtick:2,
+      },
+      yaxis: {
+        title: 'Average hourly <br>output',
+        showgrid: true, zeroline: false, tickformat: ',.0%', ticks:'outside', range:[-0.02,1.05],dtick:0.2
+      }
     }
+    return {data, layout , config: {displayModeBar: false}}
+  }
+*/
+  /*
+  function chartMonthlyDiurnals() {
+
+    var data = unikaCalmonthlyHours.map((month, month_no)=>{
+      return {
+        y:month.map(v=>v.meanHourlyCapFactor),
+        x:[...Array(24).keys()],
+        mode: 'lines', line: {shape:'spline',color: colors.wind[month_no],width:2}, fill:'',
+        type: 'scatter', hoverinfo: 'name', showlegend:month_no==0 || month_no==11,  name: 'Wind ' + months[month_no]
+      }
+    })
+
+    data = data.concat(kalumbilaCalmonthlyHours.map((month, month_no) => {
+    return {
+      y:month.map(v=>v.meanHourlyCapFactor),
+      x:[...Array(24).keys()],
+      mode: 'lines', line: {shape:'spline',color: colors.solar[month_no],width:2}, fill:'',
+      type: 'scatter', hoverinfo: 'name', showlegend:month_no==0 || month_no==11,  name: 'Solar ' + months[month_no]
+    }
+    }))
+
+    var layout = {
+      height: 290,
+      font: font, hovermode:'closest',
+      showlegend: true, legend: {orientation: 'h',xanchor: 'left', x:0, y: 1.1},
+      margin: {l: 70,r: 5,b: 45,t: 0},
+      xaxis: { title: 'Hour',
+        showgrid: true, zeroline: false, ticks:'outside', dtick:1,
+      },
+      yaxis: {
+        title: 'Output',
+        showgrid: true, zeroline: false, tickformat: '0%', ticks:'outside'
+      }
+    }
+
+    return {data, layout , config: {displayModeBar: false}}
+  }
+    */
+  function chartDiurnalByMonth(indx) {
+    var data = [{
+      y:kalumbilaCalmonthlyHours[indx].map(v=>v.p90HourlyCapFactor),
+      x:[...Array(24).keys()],
+      mode: 'lines', line: {shape:'spline',color: makeTrans(colors.solar[indx],0.8),width:0.5}, fill:'',
+      type: 'scatter', hoverinfo: 'none', showlegend:false,
+    },{
+      y:kalumbilaCalmonthlyHours[indx].map(v=>v.p10HourlyCapFactor),
+      x:[...Array(24).keys()],
+      mode: 'lines', line: {shape:'spline',color: makeTrans(colors.solar[indx],0.8),width:0.5}, fill:'tonexty',
+      type: 'scatter', hoverinfo: 'none', showlegend:false,
+    },{
+      y:kalumbilaCalmonthlyHours[indx].map(v=>v.meanHourlyCapFactor),
+      x:[...Array(24).keys()],
+      mode: 'lines', line: {shape:'spline',color: makeTrans(colors.solar[indx],0.9),width:1.5}, fill:'',
+      type: 'scatter', hoverinfo: 'none', showlegend:false,
+    },{
+      y:unikaCalmonthlyHours[indx].map(v=>v.p90HourlyCapFactor),
+      x:[...Array(24).keys()],
+      mode: 'lines', line: {shape:'spline',color: makeTrans(colors.wind[indx],0.8),width:0.5}, fill:'',
+      type: 'scatter', hoverinfo: 'none', showlegend:false,
+    },{
+      y:unikaCalmonthlyHours[indx].map(v=>v.p10HourlyCapFactor),
+      x:[...Array(24).keys()],
+      mode: 'lines', line: {shape:'spline',color: makeTrans(colors.wind[indx],0.8),width:0.5}, fill:'tonexty',
+      type: 'scatter', hoverinfo: 'none', showlegend:false,
+    },{
+      y:unikaCalmonthlyHours[indx].map(v=>v.meanHourlyCapFactor),
+      x:[...Array(24).keys()],
+      mode: 'lines', line: {shape:'spline',color: makeTrans(colors.wind[indx],0.9),width:1.5}, fill:'',
+      type: 'scatter', hoverinfo: 'none', showlegend:false,
+    }]
+
+
+    var layout = {
+      height: 150, width: 350,
+      font: font, hovermode:'closest', title:{xref:'paper',x: 0.05, yref:'paper', y:0.85, font:{size: 16}, text:months[indx]},
+      showlegend: false,
+      margin: {l: 40,r: 10,b: 40,t: 0},
+      xaxis: {
+        showgrid: false, zeroline: false, ticks:'outside', dtick:4, range:[0,23], visible:indx==0
+      },
+      yaxis: {
+        showgrid: true, zeroline: false, tickformat: '.0%', ticks:'none',
+        showticklabels:indx==0,showticks:false, range: [-0.01,1.04]
+      }
+    }
+    return {data, layout , config: {displayModeBar: false}}
+  }
+
+  function chartMeanDiurnalCFsForRatios() {
+      var data =[
+        {
+          y:combinationModels[10].combined_cfs[5],
+          x:[...Array(24).keys()],
+          mode: 'lines', line: {shape:'spline',color: makeTrans(colors.wind[1],0.5),width:2}, fill:'',
+          type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(combinationModels[10].ratio)}MW solar per MW wind`
+        },{
+          y:optimumCombination.combined_cfs[5],
+          x:[...Array(24).keys()],
+          mode: 'lines', line: {shape:'spline',color: colors.combined[4],width:4}, fill:'',
+          type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(optimumCombination.ratio)}MW solar per MW wind`
+        },{
+          y:combinationModels[90].combined_cfs[5],
+          x:[...Array(24).keys()],
+          mode: 'lines', line: {shape:'spline',color: makeTrans(colors.solar[1],0.5),width:2}, fill:'',
+          type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(combinationModels[90].ratio)}MW solar per MW wind`
+        }]
+
+      var layout = {
+        height: 270,
+        font: font, hovermode:'closest',
+        showlegend: true, legend: {orientation: 'h',xanchor: 'left', x:0, y: 1.1},
+        margin: {l: 70,r: 5,b: 45,t: 0},
+        xaxis: { title: 'Hour',
+          showgrid: true, zeroline: false, ticks:'outside', dtick:1,
+        },
+        yaxis: {
+          title: 'Output',
+          showgrid: true, zeroline: false, tickformat: '0%', ticks:'outside', range:[0,1]
+        }
+      }
+
+      return {data, layout , config: {displayModeBar: false}}
+
+  }
+
+  function chartMonthlyDiurnalsforCombined() {
+    var data = combinedCalmonthlyHours.map((month, month_no)=>{
+      return {
+        y:month.map(v=>v.meanHourlyEnergyMWh),
+        x:[...Array(24).keys()],
+        mode: 'lines', line: {shape:'spline',color: colors.combined[month_no],width:2}, fill:'',
+        type: 'scatter', hoverinfo: 'name', showlegend:false,  name: months[month_no]
+      }
+    })
+
+    var layout = {
+      height: 300,
+      font: font, hovermode:'closest',
+      showlegend: true, legend: {orientation: 'h',xanchor: 'left', x:0, y: 1.1},
+      margin: {l: 50,r: 5,b: 30,t: 0},
+      xaxis: {
+        showgrid: true, zeroline: false, ticks:'outside', dtick:1,
+      },
+      yaxis: {
+        title: 'Energy MWh/hour',
+        showgrid: true, zeroline: false, tickformat: '.0f', ticks:'outside'
+      }
+    }
+    return {data, layout , config: {displayModeBar: false}}
+  }
+
+  function chartCombinedDailyIntermittency() {
+
+  var data = [
+    {
+      x: kalumbilaCalmonthly.map(v=>v.month),
+      y: kalumbilaCalmonthly.map(v=>v.coefVarDailyEnergy),
+      type: 'scatter', showlegend:true, hoverinfo:'none',name: 'Solar',
+      mode:'lines', line: {shape: 'spline',width:2, color: colors.solar[1]}
+    },
+    {
+      x: unikaCalmonthly.map(v=>v.month),
+      y: unikaCalmonthly.map(v=>v.coefVarDailyEnergy),
+      type: 'scatter', showlegend:true, hoverinfo:'none', name:'Wind',
+      mode:'lines', line: {shape: 'spline',width:2, color: colors.wind[1]}
+    },{
+      x: mixedCalmonthly.map(v=>v.month),
+      y: mixedCalmonthly.map(v=>v.coefVarDailyEnergy),
+      type: 'scatter', showlegend:true, hoverinfo:'none',name:'Combined wind and solar',
+      mode:'lines', line: {shape: 'spline',width:3, color: colors.combined[1]}
+    }]
+
+  var layout = {
+    height: 300, font: font, showlegend: true,
+    margin: {t:5,b:50,l:70,r:60}, barmode:'stack',
+    legend: {orientation: 'h', x: 0, xanchor: 'left', y: -0.15},
+    xaxis: {
+      showgrid: false, zeroline: false, ticks:'outside',
+      tickvals: [ 1,2,3,4,5,6,7,8,9,10,11,12 ],
+      ticktext:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    },
+    yaxis: {
+      title: 'Coefficient of Variation <br>Daily Energy',
+      zeroline: false, showline: false, showgrid:false, tickformat: '.0%'
+    }
+  }
+
+  return {data, layout , config: {displayModeBar: false}}
+  }
+
+  function chartSolarCombinedDailyIntermittency() {
+
+  var data = [
+    {
+      x: solarMixedCalmonthly[2].map(v=>v.month),
+      y: solarMixedCalmonthly[2].map(v=>v.coefVarDailyCapFactor),
+      type: 'scatter', showlegend:true, hoverinfo:'none',name: 'Sesheke Only',
+      mode:'lines', line: {shape: 'spline',width:2, color: colors.storage[1]}
+    },{
+      x: solarMixedCalmonthly[0].map(v=>v.month),
+      y: solarMixedCalmonthly[0].map(v=>v.coefVarDailyCapFactor),
+      type: 'scatter', showlegend:true, hoverinfo:'none', name:'Solwezi Only',
+      mode:'lines', line: {shape: 'spline',width:2, color: colors.solar[1]}
+    },{
+      x: solarMixedCalmonthly[1].map(v=>v.month),
+      y: solarMixedCalmonthly[1].map(v=>v.coefVarDailyCapFactor),
+      type: 'scatter', showlegend:true, hoverinfo:'none',name:'Sesheke and Solwezi Solar PV',
+      mode:'lines', line: {shape: 'spline',width:3, color: colors.combined[1]}
+    }]
+
+  var layout = {
+    height: 300, font: font, showlegend: true,
+    margin: {t:5,b:50,l:70,r:60}, barmode:'stack',
+    legend: {orientation: 'h', x: 0, xanchor: 'left', y: -0.15},
+    xaxis: {
+      showgrid: false, zeroline: false, ticks:'outside',
+      tickvals: [ 1,2,3,4,5,6,7,8,9,10,11,12 ],
+      ticktext:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    },
+    yaxis: {
+      title: 'Coefficient of Variation <br>Daily Energy',
+      zeroline: false, showline: false, showgrid:false, tickformat: '.0%'
+    }
+  }
+
+  return {data, layout , config: {displayModeBar: false}}
+}
+
+
 </script>
 
 <template>
@@ -543,8 +940,8 @@
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
           <PlotlyChart :definition="chartLumwanaDemand" />
           <figcaption>
-          Lumwana mine forecasted power demand in MW and energy consumption in GWh/month based on 8,000hrs/year of operation.
-        </figcaption>
+            Lumwana mine forecasted power demand in MW and energy consumption in GWh/month based on 8,000hrs/year of operation.
+          </figcaption>
         </v-sheet>
       </v-col>
       <v-col cols="12">
@@ -553,36 +950,52 @@
         <router-link :to="{name: 'WindSolarYield'}">generation from renewable sources such as
           wind and solar is variable and intermittent </router-link>(dependent on weather conditions).
         <br><br>
-        The challenge is to match the supply of renewable energy with the industrial demand and whilst, in Zambia,
-        <router-link  :to="{name: 'WindSolarStorageFirm'}">certain combinations of renewable energy
-        sources can be complementary</router-link>, medium and long-term smoothing and balancing services - either from
+        The challenge is to match the supply of renewable energy with the industrial demand and whilst, in Zambia, certain
+        combinations of renewable energy
+        sources can be complementary, medium and long-term smoothing and balancing services - either from
         the utility or the regional power market - are required to ensure a consistent supply.
         <br><br>
         This analysis considers the partial supply of the mine demand with variable renewable energy from a combination of
-        the {{ unikaStatistics.capacity }}MW Mphepo Power - Unika II Wind Project and {{ kalumbilaStatistics.capacity }}MW Solwezi Solar PV projects in Zambia.
+        the planned {{ unikaStatistics.capacity }}MW Mphepo Power - Unika II Wind Project and a nominal
+        {{ kalumbilaStatistics.capacity }}MW Solar PV project near Solwezi in Zambia.
         <br><br>
-        The energy yield variability and intermittency of the two projects are shown in the following charts.
+        Whilst both wind and solar PV in Zambia provide reliable, consistent, baseload-like energy production at the longest
+        timescales (year to year), at shorter timescales their variability (including seasonality and diurnal variation) are
+        very different. At the daily timescale, Zambian wind and solar are complimentary with the highest wind yields at night
+        when there is no solar output.
+        <br><br>
+        <a target="_blank" href="/zambia-wind-solar-storage-firm-diurnal">It can be shown</a> that a combination of approximately
+        0.4MW of the solar PV to 1MW of wind capacity provides the most consistent combined daily output on average and this ratio
+        has been used to set the solar capacity in this study to 50MW (~40% of 120MW Unika II Wind).
+        <br><br>
+        The overnight cost of solar PV energy (capital cost per unit annual generation) is around 11% lower than
+        the comparible cost of Zambian wind energy, however, the very high diurnal variability of solar PV (no energy at night)
+        makes a combined plant with 0.4MW PV per MW wind much more suited to baseload industrial offtake such as for mining operations.
+        Adding more solar PV will require much greater quantities of expensive balancing energy to be provided either by batteries (BESS) or from
+        the grid. For further details <a target="_blank" href="/zambia-wind-solar-storage-firm-diurnal">see here</a>.
+        <br><br>
+        A general comparison of the energy variability and intermittency of wind and solar PV project in Zambia can be
+        over various timescales <a target="_blank" href="/zambia-wind-solar">can be found here,</a> and yield statistics
+        for the two component projects can be seen at:
+        <ul style="margin-left: 50px; margin-top: 5px; margin-bottom: 10px;">
+          <li><a target="_blank" href="/unika/yield">Unika II Wind Project - Yield Analysis</a></li>
+          <li><a target="_blank" href="/solwezi-pv-yield">Solar PV at Solwezi - Yield Analysis</a></li>
+        </ul>
+
+        A comparison of siting the solar PV plant at Solwezi, at Sesheke or
+        split between the two locations can be found <a href="solar-comparison" target="_blank">here.</a>
       </v-col>
       <v-col cols="12">
         <span class="text-h6 text-sm-h5 text-md-h4">Annual Generation</span>
+        <br>
+        Both solar PV and wind energy in Zambia provide very reliable, consistent generation on an annual
+        basis - acting as baseload.
+        The combined Unika II and Solwezi PV plants would provide an average of {{ format(',.0f')(combinedAnnualExceedance[5].energyMWh/1000) + 'GWh/year' }}
+        completely meeting the mine 2025 demand of {{ format(',.0f')(lumwanaDemand[2].annualEnergyGWh) }}GWh
+        and around 50% of the 2042 demand of
+        {{ format(',.0f')(lumwanaDemand[21].annualEnergyGWh) }}GWh.
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
-        <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
-          <PlotlyChart :definition="chartUnikaAnnualYieldExceedance()" />
-          <figcaption>
-            Annual energy exceedance probability curve for the Unika II Wind Project showing the probability of exceeding a given annual energy yield.
-          </figcaption>
-        </v-sheet>
-      </v-col>
-      <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
-        <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
-          <PlotlyChart :definition="chartKalumbilaAnnualYieldExceedance()" />
-          <figcaption>
-            Annual energy exceedance probability curve for the Solwezi Solar PV Project showing the probability of exceeding a given annual energy yield.
-          </figcaption>
-        </v-sheet>
-      </v-col>
-      <v-col :class="smAndUp?'':'px-0'" cols="12" md="8">
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
           <PlotlyChart :definition="chartCombinedAnnual()" />
           <figcaption>
@@ -590,6 +1003,30 @@
             Forecasted Lumwana mine demand for selected years is overlaid.
           </figcaption>
         </v-sheet>
+      </v-col>
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
+        <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
+          <PlotlyChart :definition="chartAnnualYieldExceedance()" />
+          <figcaption>
+            Annual energy exceedance curves for the combined solar PV and wind plants showing the median annual energy yield of the
+            plants is {{ format(',.0f')(combinedAnnualExceedance[5].energyMWh/1000) + 'GWh/year' }}, or {{ format(',.0f')(combinedAnnualExceedance[5].energyMWh/1000/12) + 'GWh/month' }}.
+          </figcaption>
+        </v-sheet>
+      </v-col>
+      <v-col cols="12">
+        <span class="text-h6 text-sm-h5 text-md-h4">Monthly Generation</span>
+        <br><br>
+        At the monthly timescale the difference between generation from wind and solar PV becomes apparent.
+        Wind generation shows significant seasonality with much higher output in the dry winter months
+        and lower output during the rainy summer months. Solar output shows very little seasonality.
+        Monthly wind generation is also much more variable from year to year compared to solar - as shown by the width of the
+        P90-P10 bands in the seasonal generation chart. At the monthly timescale the solar PV generation
+        continues to operate closer to baseload.
+        <br><br>
+        Because of the seasonality of the wind generation and therefore the combined output at the monthly timescale, the combined
+        plant would be able to meet to the total demand of the plant at certain times of year upto the 2028 demand level. However,
+        this would still require balancing with grid supplied energy to meet baseload demand. Battery storage would not be capable of
+        provding the balancing energy at these timescales.
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" lg="10" xl="8">
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
@@ -604,7 +1041,8 @@
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
           <PlotlyChart :definition="chartCalMonthlyYield()" />
           <figcaption>
-
+            Monthly energy for the Unika II Wind Project and a solar PV plant at Solwezi as well as the combined output. Solid lines
+            are the average energy and the bands are for the P90-P10 range.
           </figcaption>
         </v-sheet>
       </v-col>
@@ -612,7 +1050,7 @@
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
           <PlotlyChart :definition="chartCalMonthlyDailyYield()" />
           <figcaption>
-
+            Daily energy generation for the Unika II Wind Project and a solar PV plant at Solwezi. Solid lines are the average energy and the bands are for the P90-P10 range.
           </figcaption>
         </v-sheet>
       </v-col>
@@ -620,10 +1058,83 @@
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
           <PlotlyChart :definition="chartCalMonthlyDailyYieldCombined()" />
           <figcaption>
-
+              Daily energy generation for the combined plant.
           </figcaption>
         </v-sheet>
       </v-col>
+      <v-col cols="12">
+        <span class="text-h6 text-sm-h5 text-md-h4">Hourly Generation</span>
+        <br><br>
+        At the hourly timescale the difference between the diurnal generation profiles of wind and solar PV become
+        even more apparent and the complementary nature of the two technologies is clear. Wind generation is generally highest at night
+        when solar generation is zero. A combined plant will provide a more consistent output than either plant alone.
+      </v-col>
+      <v-col cols="12">
+        <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
+        <v-row no-gutters>
+          <v-col :key="mon" v-for="mon in Array.from(new Array(12), (x,i) => i)" cols="12" sm="6" md="4">
+            <PlotlyChart :definition="chartDiurnalByMonth(mon)" />
+          </v-col>
+        </v-row>
+        <figcaption>
+          Diurnal generation profiles for the Unika II Wind Project and a solar PV plant at Solwezi by month.
+        </figcaption>
+      </v-sheet>
+      </v-col>
+      <v-col cols="12">
+        The ratio of solar PV to wind capacity in a combined plant has a significant impact on the diurnal generation profile.
+        Too much solar PV will result in a plant that produces significant energy during the day but much less at night.
+        <a target="_blank" href="/zambia-wind-solar-storage-firm-diurnal">An analysis</a> based on the capacity of battery storage required to balance the combined plant or the
+        volume of balancing energy from the grid shows that a ratio of 0.4MW of solar PV per MW of wind capacity provides the most consistent
+        diurnal profile.
+      </v-col>
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="8">
+        <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
+          <PlotlyChart :definition="chartMeanDiurnalCFsForRatios()" />
+          <figcaption>
+            Yearly average relative combined plant output for three ratios of solar PV to wind capacity.
+          </figcaption>
+        </v-sheet>
+      </v-col>
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="8">
+        <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
+          <PlotlyChart :definition="chartMonthlyDiurnalsforCombined()" />
+          <figcaption>
+            Average diurnal generation profiles for the combined plant by month.
+          </figcaption>
+        </v-sheet>
+      </v-col>
+      <v-col cols="12">
+        <span class="text-h6 text-sm-h5 text-md-h4">Intermittency</span>
+        <br><br>
+        A measure of the intermittency of the energy generation is given by the coefficient of variation
+        of the daily energy generation (the standard deviation as a proportion of the mean).
+        Wind generation has a generally higher intermittency by this measure than solar PV generation.
+        A combination of the two plants firms up the wind.
+        <br><br>
+        By splitting the solar plant amongst more than one location and/or by adding battery storage,
+        the combined plant can be made to provide a more consistent output
+        (<a href="solar-comparison" target="_blank">see here for further details</a>).
+      </v-col>
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="8">
+        <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
+          <PlotlyChart :definition="chartCombinedDailyIntermittency()" />
+          <figcaption>
+            Coefficient of variation of daily energy generation by month for the Unika
+            II Wind Project and a solar PV plant at Solwezi as well as for the combined output.
+          </figcaption>
+        </v-sheet>
+      </v-col>
+      <v-col :class="smAndUp?'':'px-0'" cols="12" md="8">
+        <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
+          <PlotlyChart :definition="chartSolarCombinedDailyIntermittency()" />
+          <figcaption>
+            Coefficient of variation of daily energy generation by month for a solar plant
+            at Solwezi, at Sesheke and a combined plant with 50% of capacity at each location.
+          </figcaption>
+        </v-sheet>
+      </v-col>
+
     </v-row>
   </PresentationPage>
 </template>

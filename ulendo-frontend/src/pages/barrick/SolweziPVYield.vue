@@ -197,8 +197,8 @@
       },
       yaxis: {
         title: 'Monthly Energy GWh',
-        showgrid: true, zeroline: false, tickformat: '.1f', ticks:'outside',
-        range: [0,12]
+        showgrid: true, zeroline: false, tickformat: '.0f', ticks:'outside',
+        range: [6,15]
       }
     }
     return {data, layout , config: {displayModeBar: false}}
@@ -238,7 +238,7 @@
       yaxis: {
         title: 'Daily Energy MWh',
         showgrid: true, zeroline: false, tickformat: '.0f', ticks:'outside',
-        range:[0,350]
+        range:[150,550]
       }
     }
 
