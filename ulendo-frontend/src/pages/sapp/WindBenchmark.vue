@@ -19,7 +19,7 @@
 
   //import damMonthly from '@/data/sapp/output/dam/dam_monthly.csv'
   import damDaily_raw from '@/data/sapp/output/dam/dam_daily.csv'
-  import windDiurnal from '@/data/unika/output/unikaDiurnal.csv'
+  import windDiurnal from '@/data/unika2/output/unikaDiurnal.csv'
 
   const damDaily=damDaily_raw.map(d=>{
     d.dt=DateTime.fromJSDate(d.datetime)
