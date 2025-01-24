@@ -18,10 +18,13 @@
   import solarCalmonthlyHours_raw from '@/data/ilute/output/iluteCalmonthlyHours.csv'
   const solarCalmonthlyHours = groups(solarCalmonthlyHours_raw, d => d.month).map(v=>v[1])
 
-  import windDiurnal from '@/data/unika/output/unikaDiurnal.csv'
-  import windCalmonthly from '@/data/unika/output/unikaCalmonthly.csv'
-  import windCalmonthlyHours_raw from '@/data/unika/output/unikaCalmonthlyHours.csv'
+  import windDiurnal from '@/data/unika2/output/unikaDiurnal.csv'
+  import windCalmonthly from '@/data/unika2/output/unikaCalmonthly.csv'
+  import windCalmonthlyHours_raw from '@/data/unika2/output/unikaCalmonthlyHours.csv'
+import { quantile } from 'd3-array'
   const windCalmonthlyHours = groups(windCalmonthlyHours_raw, d => d.month).map(v=>v[1])
+
+  const monthDays=[31,28,31,30,31,30,31,31,30,31,30,31]
 
   const selectedRatio=ref(39)
   const ratio = computed(() => {
@@ -41,19 +44,42 @@
       return [...Array(24).keys()].map(hour_no =>
         ((solarCalmonthlyHours[month_no][hour_no].meanHourlyCapFactor * ratio.ratio) + windCalmonthlyHours[month_no][hour_no].meanHourlyCapFactor) / (1+ratio.ratio))
       })
-
       ratio.monthly_av_cfs = [...Array(12).keys()].map(month_no=>{
         return mean(ratio.combined_cfs[month_no])
+      })
+      ratio.monthly_max_cfs = [...Array(12).keys()].map(month_no=>{
+        return max(ratio.combined_cfs[month_no])
+      })
+      ratio.monthly_p75_cfs = [...Array(12).keys()].map(month_no=>{
+        return quantile(ratio.combined_cfs[month_no],0.75)
+      })
+      ratio.monthly_p90_cfs = [...Array(12).keys()].map(month_no=>{
+        return quantile(ratio.combined_cfs[month_no],0.90)
       })
 
       ratio.monthly_store = [...Array(12).keys()].map(month_no=>{
         return sum(ratio.combined_cfs[month_no].map(v=>v>ratio.monthly_av_cfs[month_no]?v-ratio.monthly_av_cfs[month_no]:0))
       })
+      ratio.monthly_store_tomax = [...Array(12).keys()].map(month_no=>{
+        return sum(ratio.combined_cfs[month_no].map(v=>ratio.monthly_max_cfs[month_no]-v))
+      })
+      ratio.monthly_store_top75 = [...Array(12).keys()].map(month_no=>{
+        return sum(ratio.combined_cfs[month_no].map(v=>v<ratio.monthly_p75_cfs[month_no]?ratio.monthly_p75_cfs[month_no]-v:0))
+      })
+      ratio.monthly_store_top90 = [...Array(12).keys()].map(month_no=>{
+        return sum(ratio.combined_cfs[month_no].map(v=>v<ratio.monthly_p90_cfs[month_no]?ratio.monthly_p90_cfs[month_no]-v:0))
+      })
+
       ratio.store_hours = [...Array(12).keys()].map(month_no=>{
         return ratio.combined_cfs[month_no].filter(v=>v>ratio.monthly_av_cfs[month_no]).length
       })
       ratio.store_max = max(ratio.monthly_store)
       ratio.store_range = max(ratio.monthly_store) - min(ratio.monthly_store)
+
+      ratio.annual_store_tomean_total = sum(ratio.monthly_store.map((v,i)=>v*monthDays[i]))
+      ratio.annual_store_tomax_total = sum(ratio.monthly_store_tomax.map((v,i)=>v*monthDays[i]))
+      ratio.annual_store_top75_total = sum(ratio.monthly_store_top75.map((v,i)=>v*monthDays[i]))
+      ratio.annual_store_top90_total = sum(ratio.monthly_store_top90.map((v,i)=>v*monthDays[i]))
 
       return ratio
     })
@@ -352,6 +378,51 @@
     }
     return {data, layout , config: {displayModeBar: false}}
   })
+
+  const chartAnnualStorageTotal = computed(() => {
+    var data = [
+    {
+      y: combinationModels.map(v=>v.annual_store_tomean_total/1000),
+      x: combinationModels.map(v=>v.ratio),
+      mode: 'lines', textposition: 'top',  line: {shape:'spline',color: colors.storage[7], width: 3 },
+      marker: {size: 5},
+      type: 'scatter', showlegend:true, name: 'To mean'
+    },{
+      y: combinationModels.map(v=>v.annual_store_top75_total/1000),
+      x: combinationModels.map(v=>v.ratio),
+      mode: 'lines', textposition: 'top',  line: {shape:'spline',color: colors.storage[5], width: 3 },
+      marker: {size: 5},
+      type: 'scatter', showlegend:true, name: 'To P75'
+    },{
+      y: combinationModels.map(v=>v.annual_store_top90_total/1000),
+      x: combinationModels.map(v=>v.ratio),
+      mode: 'lines', textposition: 'top',  line: {shape:'spline',color: colors.storage[3], width: 2 },
+      marker: {size: 5},
+      type: 'scatter', showlegend:true, name: 'To P90'
+    },{
+      y: combinationModels.map(v=>v.annual_store_tomax_total/1000),
+      x: combinationModels.map(v=>v.ratio),
+      mode: 'lines', textposition: 'top',  line: {shape:'spline',color: colors.storage[1], width: 2 },
+      marker: {size: 5},
+      type: 'scatter', showlegend:true, name: 'To max'
+    } ]
+
+    var layout = {
+      height: 250,
+      font: font, hovermode:'closest',
+      showlegend: true, legend: {orientation: 'h',xanchor: 'left', x:0, y: 1.1},
+      margin: {l: 70,r: 5,b: 45,t: 0},
+      xaxis: { title:'Ratio solar : wind capacity',
+        showgrid: true, zeroline: false,tickformat: '.1f', ticks:'outside',
+      },
+      yaxis: {
+        title: 'Energy GWh/MW/year',
+        showgrid: true, zeroline: false, tickformat: '.2f', ticks:'outside',
+      }
+    }
+    return {data, layout , config: {displayModeBar: false}}
+
+    })
 </script>
 
 <template>
@@ -362,6 +433,9 @@
         Solar PV and to a lesser extent wind power both exhibit a strong diurnal production profile.
         Solar PV has zero output during the night and conversely wind speeds are, on average, higher during the night.
         This makes the combination of wind and solar with storage a very attractive option for providing firm power.
+        <br><br>
+        Considering battery storage or grid energy to firm the output of a combined wind and solar plant, the optimum
+        ratio of solar PV to wind capacity in Zambia is found to be around 0.4 to 0.5 MW of solar per MW of wind capacity.
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
@@ -413,8 +487,9 @@
       <v-col cols="12">
         To produce completely consistent output, intraday storage capacity needs to be added to the system.
         This could be in the form of batteries or using hydro power reservoirs.
-        The storage need not be co-located with either the wind or solar plants and if it was provided by hydro reservoirs then it almost certainly would not.
-        There would be beneftis for co-locating storage with either the wind or solar plants (or both) including shared O&M resources,
+        The storage need not be co-located with either the wind or solar plants and if it was provided by hydro reservoirs
+        then it almost certainly would not be.
+        However, there would be beneftis for co-locating storage with either the wind or solar plants (or both) including shared O&M resources,
          grid access and reduced transmission losses and costs.
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
@@ -435,34 +510,57 @@
         </v-sheet>
       </v-col>
       <v-col cols="12">
-         The amount of storage required to completely flatten the daily output of the combined plant depends on the relative proportion of capacity for the wind and
-         solar plants and the month. Greater storage capacity is particularly needed in months where the wind plant has a higher diurnal range of output.
+         The amount of storage required to completely flatten the daily output of the combined plant depends on the relative
+         proportion of capacity of the wind and solar plants and the month.
       </v-col>
       <v-col cols="12">
-        To entirely flatten the dirunal output in every month then the storage capacity (in hours) must be sized for the month with the greatest
-        storage requirement. For plant ratios with a high range in monthly storage requirement (between the month with the highest
-         storage requirement and the month with the lowest) the storage will either be insufficient in some months or underutilised
-          in some month. Both situations lead to inefficieny.
+        <u>Balancing with Battery Storage</u>
+        <br><br>
+        To entirely flatten the dirunal output in every month using batteries (BESS) the storage capacity
+        must be sized for the month with the greatest storage requirement.
+        For plant capacity ratios with a high range in monthly storage requirement (between the month with the highest
+        storage requirement and the month with the lowest) the storage will either be insufficient in some months or underutilised
+          in some months. Both situations lead to inefficieny.
+      <br><br>
+        The ratio of solar capacity to wind capacity that minimises the relative storage requirement (in hours) can be determined
+        by plotting the storage required to completely flatten the diurnal output of the combined plant for a range of capacity
+        ratios for each month. For Zambian wind and solar plants this shows that {{format('.2f')(optimumCombination.ratio)}}MW of solar per MW of
+        wind capacity minimises the battery storage requirement at {{format('.1f')(optimumCombination.store_max)}} hours to flatten
+        the average diurnal output.
       </v-col>
+
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="9" md="6">
         <v-sheet class="border ma-0 pa-0">
           <PlotlyChart :definition="chartAnnualStorageRange" />
-          <figcaption>Range (maximum month to minimum month) of storage requirement to flatten the diurnal output of the combined plant by ratio of solar to wind capacity.</figcaption>
+          <figcaption>Range (maximum month to minimum month) of battery storage required to flatten the diurnal
+            output of the combined plant by ratio of solar to wind capacity.</figcaption>
         </v-sheet>
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="9" md="6">
         <v-sheet class="border ma-0 pa-0">
           <PlotlyChart :definition="chartDailyStorageRequirement" />
-          <figcaption>Daily storage requirement by month and ratio of solar to wind capacity to flatten the diurnal for a combined plant.
+          <figcaption>Daily battery storage requirement by month and ratio of solar to wind capacity to flatten the diurnal for a combined plant.
             Maximum storage requirement for the year in red. Optimum ratio is {{format('.2f')(optimumCombination.ratio)}}MW solar per MW wind
             with {{format('.1f')(optimumCombination.store_max)}} hours of storage.</figcaption>
         </v-sheet>
       </v-col>
       <v-col cols="12">
-        The ratio of solar capacity to wind capacity that minimises the relative storage requirement (in hours) can be determined
-        by plotting the storage required to completely flatten the diurnal output of the combined plant for a range of capacity
-        ratios for each month. For the Unika and Ilute plants this shows that {{format('.2f')(optimumCombination.ratio)}}MW of solar per MW of
-        wind capacity minimises the storage requirement at {{format('.1f')(optimumCombination.store_max)}} hours to flatten the average diurnal output.
+        <u>Balancing with Grid</u>
+        <br><br>
+        The optimum ratio of solar PV to wind capacity can also be considered with respect to the
+        total energy required from the grid to flatten the diurnal output of the combined plant.
+        The optimum ration varies depending on the level of firming required. Firming all the way up to the mean maximum
+        daily energy in each month requires the most imported energy and also favours plant combinations with less solar capacity.
+        <br><br>
+        The optimum ratio of solar to wind capacity for the combined plant that minimises the total energy required from the grid
+        in the case of a more realistic scenario of firming the diurnal output each day to the 75th percentile of the daily output is
+        between 0.4 and 0.5 MW of solar per MW of wind capacity, similar to the optimum ratio for BESS backed firming.
+      </v-col>
+      <v-col :class="smAndUp?'':'px-0'" cols="12" sm="9" md="6">
+        <v-sheet class="border ma-0 pa-0">
+          <PlotlyChart :definition="chartAnnualStorageTotal" />
+          <figcaption>Annual balancing energy required per MW of capacity to firm up diurnal output of a combined plant for the given ratio of solar to wind capacity.</figcaption>
+        </v-sheet>
       </v-col>
     </v-row>
   </PresentationPage>

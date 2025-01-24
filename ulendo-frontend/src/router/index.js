@@ -10,13 +10,7 @@ const pageGroups = [
       {
         name: 'WindSolarStorageFirm',
         title: 'Zambian Wind, Solar & Storage Combinations for a Firm Diurnal'
-      },
-      {
-        name: 'SolarComparison',
-        title: 'Sesheke & Copperbelt Solar PV Comparison'
-      },
-
-
+      }
     ]
   },
   {
@@ -43,7 +37,15 @@ const pageGroups = [
       {
         name: 'LumwanaSupplyDemand',
         title: 'Lumwana Mine Energy Supply and Demand Balance'
-      }
+      },
+      {
+        name: 'SolweziPVYield',
+        title: 'Solwezi PV Project - Yield Statistics'
+      },
+      {
+        name: 'SolarComparison',
+        title: 'Sesheke & Solwezi Solar PV Comparison'
+      },
     ]
   }, {
     name: 'Ilute',
@@ -52,11 +54,11 @@ const pageGroups = [
       {
         name: 'IluteYield',
         title: 'Ilute PV Project - Yield Statistics'
-      },
+      },/*
       {
         name: 'IluteGreenCo',
         title: 'Ilute PV Project - GreenCo PPA'
-      }
+      }*/
     ]
   }, {
     name: 'Unika',
@@ -112,6 +114,11 @@ const routes = [
     name: 'LumwanaSupplyDemand',
     meta: {groups:['barrick']},
     component: () => import(/* webpackChunkName: "lumwana-supply-demand" */ '@/pages/barrick/LumwanaSupplyDemand.vue'),
+  }, {
+    path: '/solwezi-pv-yield',
+    name: 'SolweziPVYield',
+    meta: {groups:['barrick']},
+    component: () => import(/* webpackChunkName: "lumwana-supply-demand" */ '@/pages/barrick/SolweziPVYield.vue'),
   }, {
     path: '/solar-comparison',
     name: 'SolarComparison',

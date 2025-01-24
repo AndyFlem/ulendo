@@ -15,7 +15,6 @@ fs.readdirSync(folder + '/output').forEach(file => {
   })
 })
 
-
 const site1Hourly = d3.csvParse(fs.readFileSync(folder + '/../ilute/output/iluteHourly.csv', 'utf-8'), d3.autoType).map(v=> {
   v.date = DateTime.fromJSDate(v.datetime)
   return v

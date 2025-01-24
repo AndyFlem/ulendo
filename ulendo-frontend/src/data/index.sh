@@ -12,9 +12,9 @@
 
 #nodemon --watch ./src/data/sapp_benchmarks/input --watch ./src/data/sapp_benchmarks/processor.js -e js,csv --verbose ./src/data/sapp_benchmarks/processor.js &
 
-nodemon --watch ./src/data/ilute/input --watch ./src/data/library --watch ./src/data/ilute/processor.js -e js,csv --verbose ./src/data/ilute/processor.js &
+#nodemon --watch ./src/data/ilute/input --watch ./src/data/library --watch ./src/data/ilute/processor.js -e js,csv --verbose ./src/data/ilute/processor.js &
 
-nodemon --watch ./src/data/unika/input --watch ./src/data/library --watch ./src/data/unika/processor.js -e js,csv --verbose ./src/data/unika/processor.js &
+#nodemon --watch ./src/data/unika2/input --watch ./src/data/library --watch ./src/data/unika2/processor.js -e js,csv --verbose ./src/data/unika2/processor.js &
 
 nodemon --watch ./src/data/kalumbila/input --watch ./src/data/library --watch ./src/data/kalumbila/processor.js -e js,csv --verbose ./src/data/kalumbila/processor.js &
 
