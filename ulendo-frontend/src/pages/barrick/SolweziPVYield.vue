@@ -318,16 +318,13 @@
     <v-row :class="!smAndUp?'ma-0 pa-0':'pa-5'">
       <v-col cols="12">
         <h1>Solwezi Solar PV Project - Yield Analysis</h1>
-        The {{kalumbilaStatistics.capacity}}MW Solwezi Solar PV project will be constructed in Sesheke District, Western Province, Zambia.
-        Construction is due to commence in 2025 and the first energy will be generated in 2026.
-        <br><br>
-        This yield analysis for a {{kalumbilaStatistics.capacity}}MW solar PV project located in the Solwezi area of
-        Northwestern Province of Zambia is based on historic satellite derived solar irradiation data for the project site and
+        This analysis is for a possible {{kalumbilaStatistics.capacity}}MWac Solar PV project near Solwezi in, Northwestern Province, Zambia.
+        It is based on historic satellite derived solar irradiation data for the project site and
         yield modelling using the PVsyst software.
       </v-col>
       <v-col cols="12">
         <h2>Summary</h2>
-          <b>Capacity:</b>&nbsp;{{kalumbilaStatistics.capacity}}MW<br>
+          <b>Capacity:</b>&nbsp;{{kalumbilaStatistics.capacity}}MWac<br>
           <b>Mean annual energy:</b>&nbsp;{{format(',.0f')(kalumbilaStatistics.medianAnnualEnergyMWh/1000)}} GWh<br>
           <b>Mean specific energy:</b>&nbsp;{{format(',.1f')(kalumbilaStatistics.meanAnnualSpecificYield/1000)}} GWh/MW<br>
           <b>Mean capacity factor:</b>&nbsp;{{format(',.0%')(kalumbilaStatistics.meanAnnualCapFactor)}} <br>

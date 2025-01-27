@@ -12,8 +12,9 @@ nodemon --watch ./src/data/barrick/input --watch ./src/data/barrick/processor.js
 
 #nodemon --watch ./src/data/ilute/input --watch ./src/data/library --watch ./src/data/ilute/processor.js -e js,csv --verbose ./src/data/ilute/processor.js &
 
-#nodemon --watch ./src/data/unika2/input --watch ./src/data/library --watch ./src/data/unika2/processor.js -e js,csv --verbose ./src/data/unika2/processor.js &
+nodemon --watch ./src/data/unika2/input --watch ./src/data/library --watch ./src/data/unika2/processor.js -e js,csv --verbose ./src/data/unika2/processor.js &
 
 #nodemon --watch ./src/data/kalumbila/input --watch ./src/data/library --watch ./src/data/kalumbila/processor.js -e js,csv --verbose ./src/data/kalumbila/processor.js &
 
 #nodemon --watch ./src/data/solar_mixing/input --watch ./src/data/library --watch ./src/data/solar_mixing/processor.js -e js,csv --verbose ./src/data/solar_mixing/processor.js &
+./

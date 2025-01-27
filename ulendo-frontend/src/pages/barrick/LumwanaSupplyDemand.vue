@@ -921,7 +921,7 @@
             <v-img src="/mphepo-logo.png" alt="Mphepo" class="mt-1" style="height: 50px;" />
           </v-col>
           <v-col cols="12" sm="8" md="10">
-            <span class="text-h4 text-sm-h3 text-md-h2">Lumwana Mine Energy Supply and Demand Balance</span>
+            <span class="text-h4 text-sm-h3 text-md-h2">Lumwana Mine Energy Supply and sacsdadasd Demand Balance</span>
           </v-col>
         </v-row>
       </v-col>
@@ -965,7 +965,7 @@
         when there is no solar output.
         <br><br>
         <a target="_blank" href="/zambia-wind-solar-storage-firm-diurnal">It can be shown</a> that a combination of approximately
-        0.4MW of the solar PV to 1MW of wind capacity provides the most consistent combined daily output on average and this ratio
+        0.4MWac of the solar PV to 1MW of wind capacity provides the most consistent combined daily output on average and this ratio
         has been used to set the solar capacity in this study to 50MW (~40% of 120MW Unika II Wind).
         <br><br>
         The overnight cost of solar PV energy (capital cost per unit annual generation) is around 11% lower than
@@ -992,7 +992,7 @@
         basis - acting as baseload.
         The combined Unika II and Solwezi PV plants would provide an average of {{ format(',.0f')(combinedAnnualExceedance[5].energyMWh/1000) + 'GWh/year' }}
         completely meeting the mine 2025 demand of {{ format(',.0f')(lumwanaDemand[2].annualEnergyGWh) }}GWh
-        and around 50% of the 2042 demand of
+        and around 40% of the 2042 demand of
         {{ format(',.0f')(lumwanaDemand[21].annualEnergyGWh) }}GWh.
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
@@ -1024,9 +1024,9 @@
         continues to operate closer to baseload.
         <br><br>
         Because of the seasonality of the wind generation and therefore the combined output at the monthly timescale, the combined
-        plant would be able to meet to the total demand of the plant at certain times of year upto the 2028 demand level. However,
+        plant would be able to meet to the total demand of the plant at certain times of year up to the 2025 demand level. However,
         this would still require balancing with grid supplied energy to meet baseload demand. Battery storage would not be capable of
-        provding the balancing energy at these timescales.
+        providing the balancing energy at these timescales.
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" lg="10" xl="8">
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">

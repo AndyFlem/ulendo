@@ -318,7 +318,7 @@
     <v-row :class="!smAndUp?'ma-0 pa-0':'pa-5'">
       <v-col cols="12">
         <h1>Ilute I Solar PV Project - Yield Analysis</h1>
-        The {{iluteStatistics.capacity}}MW Ilute I Solar PV project will be constructed in Sesheke District, Western Province, Zambia.
+        The {{iluteStatistics.capacity}}MWac Ilute I Solar PV project will be constructed in Sesheke District, Western Province, Zambia.
         Construction is due to commence in 2025 and the first energy will be generated in 2026.
         <br><br>
         This analysis of the project is based on historic satellite derived solar irradiation data for the project site and
@@ -326,7 +326,7 @@
       </v-col>
       <v-col cols="12">
         <h2>Summary</h2>
-          <b>Capacity:</b>&nbsp;{{iluteStatistics.capacity}}MW<br>
+          <b>Capacity:</b>&nbsp;{{iluteStatistics.capacity}}MWac<br>
           <b>Mean annual energy:</b>&nbsp;{{format(',.0f')(iluteStatistics.medianAnnualEnergyMWh/1000)}} GWh<br>
           <b>Mean specific energy:</b>&nbsp;{{format(',.1f')(iluteStatistics.meanAnnualSpecificYield/1000)}} GWh/MW<br>
           <b>Mean capacity factor:</b>&nbsp;{{format(',.0%')(iluteStatistics.meanAnnualCapFactor)}} <br>

@@ -435,7 +435,7 @@ import { quantile } from 'd3-array'
         This makes the combination of wind and solar with storage a very attractive option for providing firm power.
         <br><br>
         Considering battery storage or grid energy to firm the output of a combined wind and solar plant, the optimum
-        ratio of solar PV to wind capacity in Zambia is found to be around 0.4 to 0.5 MW of solar per MW of wind capacity.
+        ratio of solar PV to wind capacity in Zambia is found to be around 0.4 to 0.5 MWac of solar per MW of wind capacity.
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" md="6">
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
@@ -478,7 +478,7 @@ import { quantile } from 'd3-array'
           <v-col cols="12" sm="6" md="4">
             <v-slider v-model="selectedRatio" :max="99" :min="0" :step="1" class="align-center" hide-details>
               <template v-slot:append>
-                <span><b>{{ format('.2f')(ratio) }}</b> MW Solar PV : MW Wind</span>
+                <span><b>{{ format('.2f')(ratio) }}</b> MWac Solar PV : MW Wind</span>
               </template>
             </v-slider>
           </v-col>
@@ -496,7 +496,7 @@ import { quantile } from 'd3-array'
         <v-sheet :class="smAndUp?'border mr-2 pr-2':'border ma-0 pa-0'">
           <PlotlyChart v-if="chartMonthlyCombinedDiurnals" :definition="chartMonthlyCombinedDiurnals" />
           <figcaption>
-            Diurnal output by month for a combined plant with {{format('.2f')(ratio)}}MW solar per MW wind.
+            Diurnal output by month for a combined plant with {{format('.2f')(ratio)}}MWac solar per MW wind.
           </figcaption>
         </v-sheet>
       </v-col>
@@ -505,7 +505,7 @@ import { quantile } from 'd3-array'
           <PlotlyChart v-if="chartDailyStorageHoursByMonth" :definition="chartDailyStorageHoursByMonth" />
           <figcaption>
           Daily storage required in hours by month to entirely flatten the average diurnal output of a combined
-          plant with {{format('.2f')(ratio)}}MW solar per MW wind.
+          plant with {{format('.2f')(ratio)}}MWac solar per MW wind.
           </figcaption>
         </v-sheet>
       </v-col>
@@ -524,7 +524,7 @@ import { quantile } from 'd3-array'
       <br><br>
         The ratio of solar capacity to wind capacity that minimises the relative storage requirement (in hours) can be determined
         by plotting the storage required to completely flatten the diurnal output of the combined plant for a range of capacity
-        ratios for each month. For Zambian wind and solar plants this shows that {{format('.2f')(optimumCombination.ratio)}}MW of solar per MW of
+        ratios for each month. For Zambian wind and solar plants this shows that {{format('.2f')(optimumCombination.ratio)}}MWac of solar per MW of
         wind capacity minimises the battery storage requirement at {{format('.1f')(optimumCombination.store_max)}} hours to flatten
         the average diurnal output.
       </v-col>
@@ -540,7 +540,7 @@ import { quantile } from 'd3-array'
         <v-sheet class="border ma-0 pa-0">
           <PlotlyChart :definition="chartDailyStorageRequirement" />
           <figcaption>Daily battery storage requirement by month and ratio of solar to wind capacity to flatten the diurnal for a combined plant.
-            Maximum storage requirement for the year in red. Optimum ratio is {{format('.2f')(optimumCombination.ratio)}}MW solar per MW wind
+            Maximum storage requirement for the year in red. Optimum ratio is {{format('.2f')(optimumCombination.ratio)}}MWac solar per MW wind
             with {{format('.1f')(optimumCombination.store_max)}} hours of storage.</figcaption>
         </v-sheet>
       </v-col>

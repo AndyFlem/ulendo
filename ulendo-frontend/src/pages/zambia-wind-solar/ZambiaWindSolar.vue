@@ -469,17 +469,17 @@ console.log(solarStatistics)
         y:combinationModels[10].combined_cfs[5],
         x:[...Array(24).keys()],
         mode: 'lines', line: {shape:'spline',color: colors.combined[1],width:2}, fill:'',
-        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(combinationModels[10].ratio)}MW solar per MW wind`
+        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(combinationModels[10].ratio)}MWac solar per MW wind`
       },{
         y:optimumCombination.combined_cfs[5],
         x:[...Array(24).keys()],
         mode: 'lines', line: {shape:'spline',color: colors.combined[4],width:4}, fill:'',
-        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(optimumCombination.ratio)}MW solar per MW wind`
+        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(optimumCombination.ratio)}MWac solar per MW wind`
         },{
         y:combinationModels[90].combined_cfs[5],
         x:[...Array(24).keys()],
         mode: 'lines', line: {shape:'spline',color: colors.combined[10],width:2}, fill:'',
-        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(combinationModels[90].ratio)}MW solar per MW wind`
+        type: 'scatter', hoverinfo: 'name', showlegend:true,  name: `${format('.2f')(combinationModels[90].ratio)}MWac solar per MW wind`
       }]
 
     var layout = {
@@ -598,7 +598,7 @@ console.log(solarStatistics)
         but this has a significant cost. Diurnal and seasonal variability in wind and solar can more efficienty be
         balanced using other grid connected power generators, in particular in Zambia storage hydro. However, the diurnal
         variability of solar PV and wind in Zambia are complimentary with most of the wind resource falling at night when
-        there is no solar output. An optimum ratio of Solar PV to Wind capacity of 0.34MW:1.00MW solar:wind gives the lowest
+        there is no solar output. An optimum ratio of Solar PV to Wind capacity of 0.34MWac:1.00MW solar:wind gives the lowest
         average diurnal variation in output over the year.
         <br><br>
         Variability and intermittency in wind and solar resources are not independent of each other. Solar irradiation, for
@@ -666,8 +666,8 @@ console.log(solarStatistics)
         Zambian wind and solar plants show very different seasonal patterns of production driven by
         differing aspects of seasonal climatic conditions.
         <br><br>
-        Solar seasonality in monthly yield is relatively small varying from an average of 227 MWh/MW of
-        capacity during the rainy season in February to 280 MWh/MW in August. By contrast, wind yield is
+        Solar seasonality in monthly yield is relatively small varying from an average of 227 MWh/MWac of
+        capacity during the rainy season in February to 280 MWh/MWac in August. By contrast, wind yield is
         strongly seasonal with average monthly yield of 81 MWh/MW in rainy season January rising to 467 MWh/MW
         in dry season July.
         <br><br>
@@ -748,7 +748,7 @@ console.log(solarStatistics)
         from the two sources can produce a firmer, more constant diurnal production profile.
 
         It can be shown that the optimum ratio of solar PV to wind capacity for the firmest, most constant diurnal throughout the
-        year is {{format('.2f')(optimumCombination.ratio)}}MW:1.00MW solar:wind. <RouterLink to="/zambia-wind-solar-storage-firm-diurnal">See here for the analysis.</RouterLink>
+        year is {{format('.2f')(optimumCombination.ratio)}}MWac:1.00MW solar:wind. <RouterLink to="/zambia-wind-solar-storage-firm-diurnal">See here for the analysis.</RouterLink>
       </v-col>
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet class="border ma-0 pa-0">
@@ -759,7 +759,7 @@ console.log(solarStatistics)
       <v-col :class="smAndUp?'':'px-0'" cols="12" sm="12" md="9">
         <v-sheet class="border ma-0 pa-0">
           <PlotlyChart :definition="chartMonthlyCombinedDiurnals" />
-          <figcaption>Diurnal output by month for a combined plant with {{format('.2f')(ratio)}}MW solar per MW wind.</figcaption>
+          <figcaption>Diurnal output by month for a combined plant with {{format('.2f')(ratio)}}MWac solar per MW wind.</figcaption>
         </v-sheet>
       </v-col>
       <v-col cols="12">
@@ -780,7 +780,7 @@ console.log(solarStatistics)
         <v-sheet class="border ma-0 pa-0">
           <PlotlyChart :definition="chartDailyStorageRequirement" />
           <figcaption>Daily storage requirement by month and ratio of solar to wind capacity to flatten the diurnal for a combined plant.
-            Maximum storage requirement for the year in red. Optimum ratio is {{format('.2f')(optimumCombination.ratio)}}MW solar per MW wind
+            Maximum storage requirement for the year in red. Optimum ratio is {{format('.2f')(optimumCombination.ratio)}}MWac solar per MW wind
             with {{format('.1f')(optimumCombination.store_max)}} hours of storage.</figcaption>
         </v-sheet>
       </v-col>

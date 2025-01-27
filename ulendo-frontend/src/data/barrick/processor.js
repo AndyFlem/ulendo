@@ -15,6 +15,7 @@ fs.readdirSync(folder + '/output').forEach(file => {
   })
 })
 
+
 const lumwanaDemand_raw = d3.csvParse(fs.readFileSync(folder + '/input/lumwana_demand.csv', 'utf-8'), d3.autoType)
 const lumwanaDemand=lumwanaDemand_raw.map(v=>{
   v.year=parseInt(v.year)
